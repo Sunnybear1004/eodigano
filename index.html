@@ -122,6 +122,16 @@
   .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px}
   .chips span{font-size:14px;padding:6px 12px;border-radius:6px;border:1px solid var(--line);cursor:pointer;color:var(--soft)}
   .chips span.on{border-color:var(--ink);color:var(--ink);font-weight:600}
+  .infocard{position:absolute;left:16px;top:16px;width:min(330px,48%);max-height:calc(100% - 110px);overflow:auto;z-index:600;
+            background:#fff;border:1.5px solid var(--ink);border-radius:6px;padding:16px 18px}
+  .infocard small{font-size:13px;color:var(--soft)}
+  .infocard h4{font-family:var(--serif);font-size:22px;margin:2px 0 6px}
+  .infocard p{font-size:15px;line-height:1.6;margin-bottom:10px}
+  .infocard .ic-meta{font-size:14px;color:var(--violet);font-weight:600;margin-bottom:6px}
+  .infocard ol{margin:0 0 12px 20px;font-size:15px;line-height:1.8;color:var(--ink)}
+  .infocard .mini.line{margin-top:0}
+  .ic-hint{display:block;font-size:12px;color:var(--soft);margin-top:8px}
+  .num-ico{width:24px;height:24px;border-radius:50%;background:var(--ink);color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
   .course-h{font-size:13px;font-weight:600;color:var(--soft);margin-top:14px;padding-bottom:4px;border-bottom:1.5px solid var(--ink)}
   .course-h:first-child{margin-top:0}
   .place{padding:14px 0;border-bottom:1px solid var(--line);cursor:pointer}
@@ -206,34 +216,65 @@
      ※ 아래 장소·좌표·이야기는 예시입니다. 실제 내용으로 바꿔 주세요.
    ══════════════════════════════════════════════ -->
 <script>
-  // course : 같은 코스끼리 QR이 이어집니다.  next : 다음 장소의 id (없으면 null = 코스의 끝)
-  // ※ 좌표는 대략적인 값입니다. 카카오맵에서 장소를 검색해 정확한 좌표로 꼭 바꿔 주세요.
+  /* 구역(AREAS) : 지도 목록에 보이는 단위. 의림지처럼 안에 여러 장소가 있으면 '구역 안 코스'가 됩니다.
+       목록에서 처음 누르면  → 구역(코스) 설명
+       한 번 더 누르면       → 출발 지점 설명과 길 안내
+     장소(STOPS) : QR이 붙는 실제 지점. next 로 다음 QR이 이어지고, 구역이 끝나면 다른 구역으로도 넘어갑니다.
+     ※ 좌표는 대략적인 값입니다. 카카오맵에서 장소를 검색해 정확한 좌표로 꼭 바꿔 주세요.          */
+  const AREAS = {
+    uirimji:   { course:"제천 시내", name:"의림지", type:"known",
+                 intro:"삼한시대에 쌓았다고 전해지는 저수지예요. 둑방길에서 출발해 영호정과 경호루를 지나, 용추폭포 유리전망대까지 호숫가를 따라 걷습니다." },
+    jangnak:   { course:"제천 시내", name:"장락동 칠층모전석탑", type:"hidden",
+                 intro:"시내 동쪽 들판에 천 년 넘게 서 있는 탑이에요. 돌을 벽돌처럼 잘라 쌓은 보기 드문 모양입니다." },
+    cheongpung:{ course:"청풍호", name:"청풍문화재단지", type:"known",
+                 intro:"충주댐으로 물에 잠길 뻔한 옛 청풍 마을의 누각과 집들을 옮겨 와 다시 세운 곳이에요." },
+    jeongbang: { course:"청풍호", name:"정방사", type:"hidden",
+                 intro:"산 중턱 바위 아래의 작은 절이에요. 청풍호와 제천의 산들이 한눈에 보입니다." },
+    bakdal:    { course:"박달재", name:"박달재", type:"known",
+                 intro:"박달 도령과 금봉 낭자의 이야기가 전해지는 고개예요." },
+    naehan:    { course:"박달재", name:"오백나한상과 목굴암", type:"hidden",
+                 intro:"박달재 바로 아래, 느티나무 속에 깎아 놓은 오백 명의 수행자와 한 사람용 암자가 숨어 있어요." },
+    baeron:    { course:"박달재", name:"배론성지", type:"known",
+                 intro:"박해를 피해 숨어든 초기 천주교 신자들이 옹기를 구우며 믿음을 지킨 골짜기예요." },
+    taksa:     { course:"탁사정", name:"탁사정", type:"hidden",
+                 intro:"맑은 물과 노송이 어우러진 계곡이에요. 제천 10경의 하나입니다." }
+  };
   const STOPS = [
-    { id:1, course:"제천 시내", name:"의림지", type:"known", lat:37.1758, lng:128.2110, next:2,
-      story:"의림지는 삼한시대에 쌓았다고 전해지는 아주 오래된 저수지예요. ‘제천’이라는 이름도 둑을 쌓은 내라는 뜻으로 여기서 나왔답니다. 그런데 이 동네에는 천 년 넘게 버텨 온 것이 하나 더 있어요.",
-      tease:"시내 동쪽 들판에서, 벽돌처럼 쌓은 탑을 찾아보세요." },
-    { id:2, course:"제천 시내", name:"장락동 칠층모전석탑", type:"hidden", lat:37.1430, lng:128.2235, next:null,
+    { id:1, area:"uirimji", name:"의림지 제림 둑방길", lat:37.1735, lng:128.2105, next:2,
+      story:"지금 서 있는 둑은 삼한시대에 쌓았다고 전해져요. 둑 위의 오래된 소나무와 버드나무 숲을 ‘제림’이라고 부르지요. 이 호수를 사랑한 옛 선비들이 머물던 정자가 가까이에 있어요.",
+      tease:"호숫가의 영호정을 찾아가 보세요." },
+    { id:2, area:"uirimji", name:"영호정", lat:37.1748, lng:128.2088, next:3,
+      story:"1807년, 순조 때 세운 정자예요. 옛 시인들이 이곳에서 시를 짓고 풍류를 즐겼대요. 그런데 이 호수를 바라보는 누각이 하나 더 있어요.",
+      tease:"물가를 따라 경호루로 가 보세요." },
+    { id:3, area:"uirimji", name:"경호루", lat:37.1768, lng:128.2122, next:4,
+      story:"1948년에 세운 누각이에요. 여기서 보면 의림지가 한눈에 들어와요. 가야금의 대가 우륵이 이 호숫가에서 지냈다는 이야기도 전해져요. 그런데 이 호수의 물은 어디로 흘러갈까요?",
+      tease:"물소리를 따라 용추폭포로 가 보세요." },
+    { id:4, area:"uirimji", name:"용추폭포 유리전망대", lat:37.1733, lng:128.2128, next:5,
+      story:"2020년에 문을 연 높이 30m의 유리 바닥 전망대예요. 발아래로 폭포와 물이 그대로 보여요. 이 물은 오랜 세월 제천의 논을 적셔 왔어요. 그 긴 세월을 함께 버텨 온 탑이 시내 동쪽에 있대요.",
+      tease:"장락동 칠층모전석탑을 찾아가 보세요." },
+    { id:5, area:"jangnak", name:"장락동 칠층모전석탑", lat:37.1430, lng:128.2235, next:null,
       story:"이 탑은 돌을 벽돌처럼 잘라 일곱 층으로 쌓았어요. 10세기쯤 만든 것으로 보여요. 6·25 전쟁 때 포탄을 맞았지만 다시 쌓아 지금의 모습이 되었어요. 마을 사람들은 오래 버틴 탑이라고 ‘장수탑’이라 부르기도 해요.",
       tease:"" },
-    { id:3, course:"청풍호", name:"청풍문화재단지", type:"known", lat:37.0025, lng:128.1703, next:4,
+    { id:6, area:"cheongpung", name:"청풍문화재단지", lat:37.0025, lng:128.1703, next:7,
       story:"이 마을은 원래 여기에 있지 않았어요. 충주댐이 생기면서 물에 잠길 뻔한 누각과 집들을 하나하나 옮겨 와 다시 세운 곳이에요. 고려 때 지은 한벽루에 오르면 호수가 한눈에 보여요. 그런데 이 호수를 더 높은 곳에서 내려다보는 절이 있대요.",
       tease:"금수산 자락의 정방사로 올라가 보세요." },
-    { id:4, course:"청풍호", name:"정방사", type:"hidden", lat:37.0060, lng:128.2360, next:null,
+    { id:7, area:"jeongbang", name:"정방사", lat:37.0060, lng:128.2360, next:null,
       story:"산 중턱 바위 아래에 자리 잡은 작은 절이에요. 여기 서면 청풍호와 제천의 산들이 한눈에 들어와요. 물에 잠긴 옛 청풍 마을도 저 아래 어딘가에 있겠죠.",
       tease:"" },
-    { id:5, course:"박달재", name:"박달재", type:"known", lat:37.0930, lng:128.1085, next:6,
+    { id:8, area:"bakdal", name:"박달재", lat:37.0930, lng:128.1085, next:9,
       story:"옛날 경상도의 젊은 선비 박달 도령과 고개 아래 마을의 금봉 낭자 이야기가 전해지면서, 이 고개 이름도 박달재가 되었어요. 그런데 이 고개에는 잘 알려지지 않은 것이 숨어 있어요.",
       tease:"고개 바로 아래, 커다란 느티나무를 찾아보세요." },
-    { id:6, course:"박달재", name:"오백나한상과 목굴암", type:"hidden", lat:37.0960, lng:128.1120, next:7,
+    { id:9, area:"naehan", name:"오백나한상과 목굴암", lat:37.0960, lng:128.1120, next:10,
       story:"커다란 느티나무 안쪽에 오백 명의 수행자를 하나하나 손으로 깎아 놓았어요. 천 년 된 느티나무 속을 파서 만든 한 사람용 암자, 목굴암도 있어요. 숨어서 무언가를 지켜 온 사람들은 또 있었답니다.",
       tease:"산 너머, 배 밑바닥처럼 생긴 골짜기로 가 보세요." },
-    { id:7, course:"박달재", name:"배론성지", type:"known", lat:37.1606, lng:128.0827, next:null,
+    { id:10, area:"baeron", name:"배론성지", lat:37.1606, lng:128.0827, next:null,
       story:"박해를 피해 숨어든 초기 천주교 신자들이 옹기를 구우며 믿음을 지킨 마을이에요. 골짜기가 배 밑바닥 모양이라 ‘배론’이라는 이름이 붙었대요.",
       tease:"" },
-    { id:8, course:"탁사정", name:"탁사정", type:"hidden", lat:37.2050, lng:128.0960, next:null,
+    { id:11, area:"taksa", name:"탁사정", lat:37.2050, lng:128.0960, next:null,
       story:"조선 때 제주 수사였던 임응룡이 고향에 돌아오면서 해송 여덟 그루를 가져와 심었대요. 그래서 처음 이름은 팔송정이었어요. 맑은 물과 노송이 어우러진 이곳은 제천 10경의 하나예요.",
       tease:"" }
   ];
+  STOPS.forEach(s=>{s.course=AREAS[s.area].course;s.type=AREAS[s.area].type;});
   const START = { lat:37.1310, lng:128.1890, name:"제천역" };  // GPS를 못 쓸 때 쓰는 기본 출발점
 </script>
 <nav id="rail" aria-label="발표 순서"></nav>
@@ -314,7 +355,7 @@
       <div class="stop"><span class="dot">3</span><h3>배론성지</h3><p>숨어서 믿음을 지킨 사람들의 마을에서 코스가 끝납니다.</p></div>
       <div class="stop end"><span class="dot">✓</span><h3>다른 코스로</h3><p>제천 시내, 청풍호, 탁사정 코스가 기다립니다.</p></div>
     </div>
-    <p style="margin-top:5vh;font-size:15px">지금은 제천의 4개 코스, 8곳을 담았습니다. 장소는 계속 늘려 갈 수 있습니다.</p>
+    <p style="margin-top:5vh;font-size:15px">지금은 제천의 4개 코스, 11곳을 담았습니다. 장소는 계속 늘려 갈 수 있습니다.</p>
   </div>
 </section>
 
@@ -333,7 +374,7 @@
   <div class="inner rv">
     <div class="demo-head">
       <h2>시연 1. 지도에서 찾아가기</h2>
-      <p>왼쪽에서 장소를 고르세요.</p>
+      <p>처음 누르면 코스 설명, 다시 누르면 출발 지점이 나와요.</p>
     </div>
     <div class="frame interactive">
       <div class="mapapp">
@@ -343,8 +384,9 @@
           <button class="mini line" id="locBtn">지금 내 위치에서 출발</button>
         </div>
         <div class="mm-map"><div id="map"></div>
+          <div class="infocard" id="infoCard" hidden></div>
           <div class="maperr" id="mapErr">지도를 불러오지 못했어요.<br>인터넷에 연결한 뒤 새로고침하세요.</div>
-          <div class="navbar" id="navbar"><span id="navText">장소를 고르면 길이 표시됩니다</span><button class="mini light" id="goBtn">길 안내 시작</button></div>
+          <div class="navbar" id="navbar"><span id="navText">목록에서 장소를 누르면 설명이 나와요</span><button class="mini light" id="goBtn">길 안내 시작</button></div>
         </div>
       </div>
     </div>
@@ -471,16 +513,24 @@
   const walkMin=m=>Math.max(1,Math.round(m/75));     // 걸음 속도 약 4.5km/h
   const travel=m=>m<=2000?'걸어서 '+walkMin(m)+'분':'차로 약 '+Math.max(1,Math.round(m/600))+'분';
 
+  /* ── 구역 목록 ── */
+  const stopsOf=k=>STOPS.filter(s=>s.area===k);
+  const clicks={};               // 구역별로 몇 번 눌렀는지 (처음인지 아닌지 구분)
+  let activeArea=null, areaLayer=null;
+  const curFilter=()=>document.querySelector('#chips .on').dataset.f;
+  const pathLen=ss=>ss.slice(1).reduce((m,s,i)=>m+dist(ss[i],s),0);
+
   function renderList(filter='all'){
     const box=document.getElementById('placeList');box.innerHTML='';
     let lastCourse='';
-    STOPS.filter(s=>filter==='all'||s.type===filter).forEach(s=>{
-      if(s.course!==lastCourse){lastCourse=s.course;const h=document.createElement('div');h.className='course-h';h.textContent=s.course+' 코스';box.appendChild(h);}
-      const d=dist(me,s);
+    Object.keys(AREAS).filter(k=>filter==='all'||AREAS[k].type===filter).forEach(k=>{
+      const A=AREAS[k], ss=stopsOf(k), d=dist(me,ss[0]);
+      if(A.course!==lastCourse){lastCourse=A.course;const h=document.createElement('div');h.className='course-h';h.textContent=A.course+' 코스';box.appendChild(h);}
       const el=document.createElement('div');
-      el.className='place'+(selected&&selected.id===s.id?' sel':'')+(heard.has(s.id)?' done':'');
-      el.innerHTML='<b>'+s.name+'</b><small><em class="'+(s.type==='hidden'?'k-hid">숨은 명소':'k-known">알려진 문화재')+'</em>'+fmt(d)+', '+travel(d)+'</small>';
-      el.onclick=()=>selectStop(s);
+      el.className='place'+(activeArea===k?' sel':'')+(ss.every(s=>heard.has(s.id))?' done':'');
+      el.innerHTML='<b>'+A.name+'</b><small><em class="'+(A.type==='hidden'?'k-hid">숨은 명소':'k-known">알려진 문화재')+'</em>'
+        +(ss.length>1?ss.length+'곳 산책 코스, ':'')+fmt(d)+', '+travel(d)+'</small>';
+      el.onclick=()=>clickArea(k);
       box.appendChild(el);
     });
   }
@@ -490,18 +540,56 @@
     if(map)STOPS.forEach(s=>{const show=c.dataset.f==='all'||s.type===c.dataset.f;show?markers[s.id].addTo(map):markers[s.id].remove();});
   });
 
+  /* 처음 누르면 설명, 다시 누르면 출발 지점 */
+  function clickArea(k){
+    clicks[k]=(clicks[k]||0)+1;
+    activeArea=k;
+    clicks[k]===1?showAreaIntro(k):showStart(k);
+  }
+  function card(html){const c=document.getElementById('infoCard');c.innerHTML=html;c.hidden=false;
+    const r=c.querySelector('[data-replay]');if(r)r.onclick=()=>{clicks[activeArea]=1;showAreaIntro(activeArea);};
+    const g=c.querySelector('[data-start]');if(g)g.onclick=()=>{clicks[activeArea]=2;showStart(activeArea);};}
+  function drawArea(k){
+    if(!map)return;
+    if(areaLayer)areaLayer.remove();
+    const ss=stopsOf(k);areaLayer=L.layerGroup().addTo(map);
+    if(ss.length>1)L.polyline(ss.map(s=>[s.lat,s.lng]),{color:'#23204a',weight:3,opacity:.7}).addTo(areaLayer);
+    ss.forEach((s,i)=>L.marker([s.lat,s.lng],{icon:L.divIcon({className:'',html:'<div class="num-ico">'+(i+1)+'</div>',iconSize:[24,24],iconAnchor:[12,12]}),zIndexOffset:500}).addTo(areaLayer));
+  }
+  function showAreaIntro(k){
+    const A=AREAS[k], ss=stopsOf(k);
+    selected=null;renderList(curFilter());drawArea(k);
+    if(routeLine){routeLine.remove();routeLine=null;}
+    if(map){ss.length>1?map.fitBounds(L.latLngBounds(ss.map(s=>[s.lat,s.lng])).pad(0.5)):map.setView([ss[0].lat,ss[0].lng],15);}
+    card('<small>'+A.course+' 코스</small><h4>'+A.name+'</h4>'
+      +(ss.length>1?'<p class="ic-meta">'+ss.length+'곳, 걸어서 약 '+fmt(pathLen(ss))+'</p>':'')
+      +'<p>'+A.intro+'</p>'
+      +(ss.length>1?'<ol>'+ss.map(s=>'<li>'+s.name+'</li>').join('')+'</ol>':'')
+      +'<button class="mini" data-start>출발 지점 보기</button><span class="ic-hint">목록에서 한 번 더 눌러도 돼요</span>');
+    document.getElementById('navText').textContent=A.name+(ss.length>1?' 코스 소개':' 소개');
+  }
+  function showStart(k){
+    const A=AREAS[k], ss=stopsOf(k), s=ss[0];
+    drawArea(k);selectStop(s);
+    card('<small>출발 지점</small><h4>'+s.name+'</h4>'
+      +'<p class="ic-meta">'+fmt(dist(me,s))+', '+travel(dist(me,s))+'</p>'
+      +'<p>여기 있는 QR을 비추면 도슨트가 이야기를 시작해요.'+(ss.length>1?' 이어서 '+ss.slice(1).map(x=>x.name).join(', ')+' 순서로 QR이 이어집니다.':'')+'</p>'
+      +'<button class="mini line" data-replay>코스 설명 다시 보기</button>');
+  }
+
   function pinIcon(color){return L.divIcon({className:'',html:'<div class="pin-ico" style="background:'+color+'"></div>',iconSize:[30,30],iconAnchor:[15,30]});}
   function initMap(){
     if(map||typeof L==='undefined'){if(typeof L==='undefined')document.getElementById('mapErr').style.display='flex';return;}
-    map=L.map('map',{zoomControl:true,attributionControl:true}).setView([STOPS[0].lat,STOPS[0].lng],15);
+    map=L.map('map',{zoomControl:true,attributionControl:true}).setView([STOPS[0].lat,STOPS[0].lng],13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
     STOPS.forEach(s=>{markers[s.id]=L.marker([s.lat,s.lng],{icon:pinIcon(s.type==='hidden'?'#6A3FD6':'#2F6FE0')}).addTo(map)
-      .bindTooltip(s.name,{direction:'top',offset:[0,-28]}).on('click',()=>selectStop(s));});
+      .bindTooltip(s.name,{direction:'top',offset:[0,-28]}).on('click',()=>clickArea(s.area));});
     meMarker=L.marker([me.lat,me.lng],{icon:L.divIcon({className:'',html:'<div class="me-ico"></div>',iconSize:[18,18],iconAnchor:[9,9]})}).addTo(map);
-    map.fitBounds(L.latLngBounds([...STOPS.map(s=>[s.lat,s.lng]),[me.lat,me.lng]]).pad(0.25));
+    map.fitBounds(L.latLngBounds([...STOPS.map(s=>[s.lat,s.lng]),[me.lat,me.lng]]).pad(0.15));
+    if(activeArea)drawArea(activeArea);
   }
   function selectStop(s){
-    selected=s;renderList(document.querySelector('#chips .on').dataset.f);
+    selected=s;activeArea=s.area;renderList(curFilter());
     const d=dist(me,s);
     document.getElementById('navText').textContent=s.name+'까지 '+fmt(d)+', '+travel(d);
     if(!map)return;
@@ -510,7 +598,9 @@
     map.fitBounds(routeLine.getBounds().pad(0.4));
   }
   document.getElementById('goBtn').onclick=()=>{
-    if(!selected){document.getElementById('navText').textContent='먼저 장소를 선택하세요';return;}
+    if(!selected){
+      if(activeArea){clicks[activeArea]=2;showStart(activeArea);return;}
+      document.getElementById('navText').textContent='먼저 목록에서 장소를 고르세요';return;}
     if(!map)return;
     const s=selected,from={...me},t0=performance.now(),T=4000;
     if(walker)walker.remove();
@@ -594,7 +684,7 @@
   document.getElementById('nextBtn').onclick=()=>{
     const next=lastStop&&lastStop.next?STOPS.find(x=>x.id===lastStop.next):null;
     if(!next){STOPS.filter(x=>x.course===(lastStop&&lastStop.course)).forEach(x=>heard.delete(x.id));lastStop=null;selected=null;me={...START};if(meMarker)meMarker.setLatLng([me.lat,me.lng]);
-      document.getElementById('docentLayer').classList.remove('on');progEl.innerHTML='';renderList();goTo(secs.indexOf(document.getElementById('demo-map')));return;}
+      document.getElementById('docentLayer').classList.remove('on');progEl.innerHTML='';activeArea=null;if(routeLine){routeLine.remove();routeLine=null;}if(areaLayer){areaLayer.remove();areaLayer=null;}document.getElementById('infoCard').hidden=true;document.getElementById('navText').textContent='코스를 마쳤어요. 다른 코스를 골라 보세요';renderList(curFilter());goTo(secs.indexOf(document.getElementById('demo-map')));return;}
     me={lat:lastStop.lat,lng:lastStop.lng};if(meMarker)meMarker.setLatLng([me.lat,me.lng]);
     goTo(secs.indexOf(document.getElementById('demo-map')));
     setTimeout(()=>selectStop(next),DURATION+50);
