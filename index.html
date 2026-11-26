@@ -122,6 +122,8 @@
   .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px}
   .chips span{font-size:14px;padding:6px 12px;border-radius:6px;border:1px solid var(--line);cursor:pointer;color:var(--soft)}
   .chips span.on{border-color:var(--ink);color:var(--ink);font-weight:600}
+  .course-h{font-size:13px;font-weight:600;color:var(--soft);margin-top:14px;padding-bottom:4px;border-bottom:1.5px solid var(--ink)}
+  .course-h:first-child{margin-top:0}
   .place{padding:14px 0;border-bottom:1px solid var(--line);cursor:pointer}
   .place b{display:block;font-family:var(--serif);font-size:19px;margin-bottom:4px}
   .place small{font-size:14px;color:var(--soft)}
@@ -177,12 +179,12 @@
   .ctrl{display:flex;gap:8px;padding:12px 18px 16px}
 
   /* ── 시연용 QR ── */
-  .qrgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:3vw}
-  .qrcard{border-top:1.5px solid var(--ink);padding-top:18px}
-  .qrcard .qr{width:min(15vw,190px);aspect-ratio:1;margin-bottom:14px}
+  .qrgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:2.5vh 2.5vw}
+  .qrcard{border-top:1.5px solid var(--ink);padding-top:12px}
+  .qrcard .qr{width:min(10vw,16vh,170px);aspect-ratio:1;margin-bottom:8px}
   .qrcard .qr img,.qrcard .qr canvas{width:100%!important;height:100%!important}
-  .qrcard b{display:block;font-family:var(--serif);font-size:20px}
-  .qrcard small{font-size:15px;color:var(--soft)}
+  .qrcard b{display:block;font-family:var(--serif);font-size:17px}
+  .qrcard small{font-size:14px;color:var(--soft)}
   @media print{body{overflow:visible}section{display:none}section[data-title="시연용 QR"]{display:flex;height:auto}#rail{display:none}}
 
   #end h1{font-size:clamp(72px,9vw,150px);line-height:1}
@@ -204,18 +206,35 @@
      ※ 아래 장소·좌표·이야기는 예시입니다. 실제 내용으로 바꿔 주세요.
    ══════════════════════════════════════════════ -->
 <script>
+  // course : 같은 코스끼리 QR이 이어집니다.  next : 다음 장소의 id (없으면 null = 코스의 끝)
+  // ※ 좌표는 대략적인 값입니다. 카카오맵에서 장소를 검색해 정확한 좌표로 꼭 바꿔 주세요.
   const STOPS = [
-    { id:1, name:"의림지", type:"known", lat:37.1812, lng:128.2125,
-      story:"이 연못은 아주 오래전 사람들이 힘을 모아 만든 저수지예요. 그런데 이 둑을 쌓던 날, 한 사람이 남긴 약속이 있었답니다. 그 약속의 이야기는…",
-      tease:"저 언덕 위 정자에 가면 들려드릴게요." },
-    { id:2, name:"언덕 위 정자 (예시)", type:"hidden", lat:37.1838, lng:128.2148,
-      story:"잘 찾아오셨어요! 약속을 남긴 사람은 매일 이 정자에 올라 연못을 내려다봤대요. 그리고 마지막 날, 무언가를 숲속에 묻어 두었다고 해요.",
-      tease:"마지막 조각은 숲길 끝 바위 옆에 있어요." },
-    { id:3, name:"숲길 끝 바위 (예시)", type:"hidden", lat:37.1795, lng:128.2168,
-      story:"드디어 마지막 장소예요. 그가 묻어 둔 건 보물이 아니라, 이 마을을 지켜 달라는 편지였어요. 그 마음이 지금의 의림지를 지켜 온 거랍니다.",
+    { id:1, course:"제천 시내", name:"의림지", type:"known", lat:37.1758, lng:128.2110, next:2,
+      story:"의림지는 삼한시대에 쌓았다고 전해지는 아주 오래된 저수지예요. ‘제천’이라는 이름도 둑을 쌓은 내라는 뜻으로 여기서 나왔답니다. 그런데 이 동네에는 천 년 넘게 버텨 온 것이 하나 더 있어요.",
+      tease:"시내 동쪽 들판에서, 벽돌처럼 쌓은 탑을 찾아보세요." },
+    { id:2, course:"제천 시내", name:"장락동 칠층모전석탑", type:"hidden", lat:37.1430, lng:128.2235, next:null,
+      story:"이 탑은 돌을 벽돌처럼 잘라 일곱 층으로 쌓았어요. 10세기쯤 만든 것으로 보여요. 6·25 전쟁 때 포탄을 맞았지만 다시 쌓아 지금의 모습이 되었어요. 마을 사람들은 오래 버틴 탑이라고 ‘장수탑’이라 부르기도 해요.",
+      tease:"" },
+    { id:3, course:"청풍호", name:"청풍문화재단지", type:"known", lat:37.0025, lng:128.1703, next:4,
+      story:"이 마을은 원래 여기에 있지 않았어요. 충주댐이 생기면서 물에 잠길 뻔한 누각과 집들을 하나하나 옮겨 와 다시 세운 곳이에요. 고려 때 지은 한벽루에 오르면 호수가 한눈에 보여요. 그런데 이 호수를 더 높은 곳에서 내려다보는 절이 있대요.",
+      tease:"금수산 자락의 정방사로 올라가 보세요." },
+    { id:4, course:"청풍호", name:"정방사", type:"hidden", lat:37.0060, lng:128.2360, next:null,
+      story:"산 중턱 바위 아래에 자리 잡은 작은 절이에요. 여기 서면 청풍호와 제천의 산들이 한눈에 들어와요. 물에 잠긴 옛 청풍 마을도 저 아래 어딘가에 있겠죠.",
+      tease:"" },
+    { id:5, course:"박달재", name:"박달재", type:"known", lat:37.0930, lng:128.1085, next:6,
+      story:"옛날 경상도의 젊은 선비 박달 도령과 고개 아래 마을의 금봉 낭자 이야기가 전해지면서, 이 고개 이름도 박달재가 되었어요. 그런데 이 고개에는 잘 알려지지 않은 것이 숨어 있어요.",
+      tease:"고개 바로 아래, 커다란 느티나무를 찾아보세요." },
+    { id:6, course:"박달재", name:"오백나한상과 목굴암", type:"hidden", lat:37.0960, lng:128.1120, next:7,
+      story:"커다란 느티나무 안쪽에 오백 명의 수행자를 하나하나 손으로 깎아 놓았어요. 천 년 된 느티나무 속을 파서 만든 한 사람용 암자, 목굴암도 있어요. 숨어서 무언가를 지켜 온 사람들은 또 있었답니다.",
+      tease:"산 너머, 배 밑바닥처럼 생긴 골짜기로 가 보세요." },
+    { id:7, course:"박달재", name:"배론성지", type:"known", lat:37.1606, lng:128.0827, next:null,
+      story:"박해를 피해 숨어든 초기 천주교 신자들이 옹기를 구우며 믿음을 지킨 마을이에요. 골짜기가 배 밑바닥 모양이라 ‘배론’이라는 이름이 붙었대요.",
+      tease:"" },
+    { id:8, course:"탁사정", name:"탁사정", type:"hidden", lat:37.2050, lng:128.0960, next:null,
+      story:"조선 때 제주 수사였던 임응룡이 고향에 돌아오면서 해송 여덟 그루를 가져와 심었대요. 그래서 처음 이름은 팔송정이었어요. 맑은 물과 노송이 어우러진 이곳은 제천 10경의 하나예요.",
       tease:"" }
   ];
-  const START = { lat:37.1790, lng:128.2100, name:"출발 지점" };  // GPS를 못 쓸 때 쓰는 기본 출발점
+  const START = { lat:37.1310, lng:128.1890, name:"제천역" };  // GPS를 못 쓸 때 쓰는 기본 출발점
 </script>
 <nav id="rail" aria-label="발표 순서"></nav>
 
@@ -290,12 +309,12 @@
   <div class="inner rv">
     <h2>QR이 다음 QR을 부릅니다.</h2>
     <div class="route">
-      <div class="stop"><span class="dot">1</span><h3>의림지</h3><p>도슨트가 둑을 쌓던 날의 약속 이야기를 시작합니다.</p><q>그 이야기는 언덕 위 정자에서</q></div>
-      <div class="stop"><span class="dot">2</span><h3>언덕 위 정자</h3><p>이야기가 이어지고, 새로운 단서가 나옵니다.</p><q>마지막 조각은 숲길 끝 바위 옆에</q></div>
-      <div class="stop"><span class="dot">3</span><h3>숲길 끝 바위</h3><p>흩어진 단서가 하나로 모입니다.</p><q>이제 끝을 들려드릴게요</q></div>
-      <div class="stop end"><span class="dot">✓</span><h3>이야기의 끝</h3><p>전체 이야기와 함께, 걸어온 코스를 항공 화면으로 한눈에 봅니다.</p></div>
+      <div class="stop"><span class="dot">1</span><h3>박달재</h3><p>도슨트가 박달 도령과 금봉 낭자의 이야기를 들려줍니다.</p><q>고개 바로 아래, 커다란 느티나무를</q></div>
+      <div class="stop"><span class="dot">2</span><h3>오백나한상과 목굴암</h3><p>느티나무 속에 깎아 놓은 오백 명의 수행자를 만납니다.</p><q>배 밑바닥처럼 생긴 골짜기로</q></div>
+      <div class="stop"><span class="dot">3</span><h3>배론성지</h3><p>숨어서 믿음을 지킨 사람들의 마을에서 코스가 끝납니다.</p></div>
+      <div class="stop end"><span class="dot">✓</span><h3>다른 코스로</h3><p>제천 시내, 청풍호, 탁사정 코스가 기다립니다.</p></div>
     </div>
-    <p style="margin-top:5vh;font-size:15px">장소와 이야기는 예시입니다. 실제 지역의 전설과 역사로 채울 예정입니다.</p>
+    <p style="margin-top:5vh;font-size:15px">지금은 제천의 4개 코스, 8곳을 담았습니다. 장소는 계속 늘려 갈 수 있습니다.</p>
   </div>
 </section>
 
@@ -441,7 +460,7 @@
 
 
   /* ══ 이야기 진행 상태 ══ */
-  let progressIdx=0;              // 지금까지 들은 마지막 장소 (0이면 아직 없음)
+  const heard=new Set();          // 이야기를 들은 장소들
   let selected=null;              // 지도에서 고른 장소
 
   /* ══ 기능 1: 지도 ══════════════════════════════════════ */
@@ -450,14 +469,17 @@
     const x=Math.sin(dLa/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dLo/2)**2;return 2*R*Math.asin(Math.sqrt(x));};
   const fmt=m=>m<1000?Math.round(m)+'m':(m/1000).toFixed(1)+'km';
   const walkMin=m=>Math.max(1,Math.round(m/75));     // 걸음 속도 약 4.5km/h
+  const travel=m=>m<=2000?'걸어서 '+walkMin(m)+'분':'차로 약 '+Math.max(1,Math.round(m/600))+'분';
 
   function renderList(filter='all'){
     const box=document.getElementById('placeList');box.innerHTML='';
+    let lastCourse='';
     STOPS.filter(s=>filter==='all'||s.type===filter).forEach(s=>{
+      if(s.course!==lastCourse){lastCourse=s.course;const h=document.createElement('div');h.className='course-h';h.textContent=s.course+' 코스';box.appendChild(h);}
       const d=dist(me,s);
       const el=document.createElement('div');
-      el.className='place'+(selected&&selected.id===s.id?' sel':'')+(s.id<=progressIdx?' done':'');
-      el.innerHTML='<b>'+s.name+'</b><small><em class="'+(s.type==='hidden'?'k-hid">숨은 명소':'k-known">알려진 문화재')+'</em>'+fmt(d)+', 걸어서 '+walkMin(d)+'분</small>';
+      el.className='place'+(selected&&selected.id===s.id?' sel':'')+(heard.has(s.id)?' done':'');
+      el.innerHTML='<b>'+s.name+'</b><small><em class="'+(s.type==='hidden'?'k-hid">숨은 명소':'k-known">알려진 문화재')+'</em>'+fmt(d)+', '+travel(d)+'</small>';
       el.onclick=()=>selectStop(s);
       box.appendChild(el);
     });
@@ -481,7 +503,7 @@
   function selectStop(s){
     selected=s;renderList(document.querySelector('#chips .on').dataset.f);
     const d=dist(me,s);
-    document.getElementById('navText').textContent=s.name+'까지 '+fmt(d)+', 걸어서 '+walkMin(d)+'분';
+    document.getElementById('navText').textContent=s.name+'까지 '+fmt(d)+', '+travel(d);
     if(!map)return;
     if(routeLine)routeLine.remove(); if(walker){walker.remove();walker=null;}
     routeLine=L.polyline([[me.lat,me.lng],[s.lat,s.lng]],{color:'#6A3FD6',weight:4,dashArray:'2 9',lineCap:'round'}).addTo(map);
@@ -514,7 +536,6 @@
   const video=document.getElementById('video'),cvs=document.getElementById('qrCanvas'),ctx=cvs.getContext('2d',{willReadFrequently:true});
   let stream=null,scanning=false,typing=null,lastStop=null;
   const progEl=document.getElementById('progress');
-  STOPS.forEach(()=>progEl.appendChild(document.createElement('i')));
 
   async function startCam(){
     if(stream){stopCam();return;}
@@ -551,25 +572,29 @@
     setTimeout(()=>requestAnimationFrame(scan),120);
   }
   function showDocent(s){
-    lastStop=s;progressIdx=Math.max(progressIdx,s.id);renderList(document.querySelector('#chips .on').dataset.f);
-    [...progEl.children].forEach((b,i)=>b.classList.toggle('on',i<progressIdx));
+    lastStop=s;heard.add(s.id);renderList(document.querySelector('#chips .on').dataset.f);
+    progEl.innerHTML='';STOPS.filter(x=>x.course===s.course).forEach(x=>{const b=document.createElement('i');if(heard.has(x.id))b.className='on';progEl.appendChild(b);});
     const layer=document.getElementById('docentLayer');layer.classList.remove('on');void layer.offsetWidth;layer.classList.add('on');
     document.getElementById('scanbox').classList.remove('on');document.getElementById('camIdle').classList.add('hide');
     document.getElementById('dName').textContent=s.name;
     document.getElementById('droneLbl').textContent=s.name+' 위에서 본 모습';
-    const next=STOPS.find(x=>x.id===s.id+1);
+    const next=s.next?STOPS.find(x=>x.id===s.next):null;
     const full=s.story+(s.tease?' '+s.tease:'');
     const nb=document.getElementById('nextBtn');
-    nb.textContent=next?next.name+'로 가기 ('+fmt(dist(s,next))+')':'이야기 끝. 처음부터 다시';
+    nb.textContent=next?next.name+'(으)로 가기 ('+fmt(dist(s,next))+')':s.course+' 코스 끝. 다른 코스 고르기';
     const el=document.getElementById('dText');el.textContent='';clearInterval(typing);let k=0;
     typing=setInterval(()=>{el.textContent=full.slice(0,++k);if(k>=full.length)clearInterval(typing);},45);
   }
   document.getElementById('camBtn').onclick=startCam;
-  document.getElementById('simBtn').onclick=()=>{const n=lastStop?STOPS.find(x=>x.id===lastStop.id+1)||STOPS[0]:STOPS[0];showDocent(n);};
+  document.getElementById('simBtn').onclick=()=>{
+    // 지도에서 고른 장소가 있으면 그곳, 아니면 코스의 다음 장소, 그것도 없으면 아직 안 들은 첫 장소
+    let n=(selected&&!heard.has(selected.id))?selected:(lastStop&&lastStop.next?STOPS.find(x=>x.id===lastStop.next):null);
+    if(!n)n=STOPS.find(x=>!heard.has(x.id))||STOPS[0];
+    showDocent(n);};
   document.getElementById('nextBtn').onclick=()=>{
-    const next=lastStop&&STOPS.find(x=>x.id===lastStop.id+1);
-    if(!next){progressIdx=0;lastStop=null;me={...START};if(meMarker)meMarker.setLatLng([me.lat,me.lng]);
-      document.getElementById('docentLayer').classList.remove('on');[...progEl.children].forEach(b=>b.classList.remove('on'));renderList();return;}
+    const next=lastStop&&lastStop.next?STOPS.find(x=>x.id===lastStop.next):null;
+    if(!next){STOPS.filter(x=>x.course===(lastStop&&lastStop.course)).forEach(x=>heard.delete(x.id));lastStop=null;selected=null;me={...START};if(meMarker)meMarker.setLatLng([me.lat,me.lng]);
+      document.getElementById('docentLayer').classList.remove('on');progEl.innerHTML='';renderList();goTo(secs.indexOf(document.getElementById('demo-map')));return;}
     me={lat:lastStop.lat,lng:lastStop.lng};if(meMarker)meMarker.setLatLng([me.lat,me.lng]);
     goTo(secs.indexOf(document.getElementById('demo-map')));
     setTimeout(()=>selectStop(next),DURATION+50);
@@ -585,7 +610,7 @@
   (function(){
     const grid=document.getElementById('qrGrid'),base=location.origin+location.pathname;
     STOPS.forEach(s=>{const c=document.createElement('div');c.className='qrcard';
-      c.innerHTML='<div class="qr"></div><b>'+s.id+'번째 장소</b><small>'+s.name+'</small>';grid.appendChild(c);
+      c.innerHTML='<div class="qr"></div><b>'+s.name+'</b><small>'+s.course+' 코스</small>';grid.appendChild(c);
       const url=(location.protocol.startsWith('http')?base:'EODIGANO-'+s.id)+(location.protocol.startsWith('http')?'?stop='+s.id:'');
       if(typeof QRCode!=='undefined')new QRCode(c.querySelector('.qr'),{text:url,width:360,height:360,correctLevel:QRCode.CorrectLevel.M});
       else c.querySelector('.qr').innerHTML='<div style="padding-top:70px;color:#999">인터넷 연결 시 표시</div>';});
