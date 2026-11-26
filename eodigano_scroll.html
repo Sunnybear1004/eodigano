@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>어디가노 · 세명, 고!</title>
+<style>
+  :root{
+    --forest:#1f3d2b; --forest2:#2f5a3f; --moss:#7a9a63;
+    --hanji:#f6f1e7; --hanji2:#efe7d6; --paper:#fffdf8; --ink:#1d1d1b; --muted:#6b6658;
+    --vermil:#c8553d; --gold:#d9a441; --sky:#3b7fc4;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{overscroll-behavior:none}
+  body{overflow:hidden}   /* 자유 스크롤을 막고, 한 번 스크롤할 때 한 장씩만 넘어가게 함 */
+  body{font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+       color:var(--ink);background:var(--hanji);word-break:keep-all;overflow-x:hidden}
+
+  /* ── 섹션: 데스크탑 한 화면(16:9 기준) 크기, 경계선 없이 이어짐 ── */
+  section{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:9vh 7vw;position:relative}
+  .inner{width:100%;max-width:1280px}
+
+  /* 배경색이 섹션마다 자연스럽게 이어지도록 그라데이션으로 연결 */
+  .bg-a{background:var(--hanji)}
+  .bg-ab{background:linear-gradient(var(--hanji),var(--hanji2))}
+  .bg-b{background:var(--hanji2)}
+  .bg-ba{background:linear-gradient(var(--hanji2),var(--hanji))}
+
+  /* ── 아래에서 밀려 올라오는 등장 효과 ── */
+  .rv{opacity:0;transform:translateY(70px);transition:opacity .9s ease,transform .9s cubic-bezier(.2,.7,.2,1)}
+  .rv.on{opacity:1;transform:none}
+  .rv.gone{opacity:0;transform:translateY(-50px)}   /* 위로 쓸려 올라가며 사라짐 */
+  .d1{transition-delay:.12s}.d2{transition-delay:.24s}.d3{transition-delay:.36s}.d4{transition-delay:.48s}
+
+  /* 공통 글자 */
+  .tag{font-size:clamp(14px,1.2vw,18px);font-weight:700;letter-spacing:.14em;color:var(--vermil);margin-bottom:14px}
+  h1{font-size:clamp(64px,9vw,140px);font-weight:800;line-height:1.05;letter-spacing:-.02em}
+  h2{font-size:clamp(34px,3.6vw,56px);font-weight:800;color:var(--forest);line-height:1.25;margin-bottom:4vh}
+  p,li{font-size:clamp(17px,1.5vw,24px);line-height:1.65}
+  .muted{color:var(--muted)}
+  .hl{color:var(--vermil)}
+  .quote{font-size:clamp(22px,2.2vw,34px);font-weight:700;line-height:1.5;border-left:8px solid var(--vermil);padding-left:28px;color:var(--forest)}
+
+  .grid{display:grid;gap:24px}
+  .g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}
+  .card{background:var(--paper);border-radius:20px;padding:32px;box-shadow:0 6px 24px rgba(31,61,43,.07)}
+  .card h3{font-size:clamp(20px,1.7vw,26px);color:var(--forest);margin-bottom:10px}
+  .card p{font-size:clamp(15px,1.25vw,20px);color:#3b3a35}
+  .num{font-size:clamp(28px,2.6vw,40px);font-weight:800;color:var(--gold);line-height:1;margin-bottom:14px}
+
+  /* ── 표지 ── */
+  #cover{background:radial-gradient(circle at 78% 22%,#3d6b4d 0,var(--forest) 55%,#142a1d 100%);color:#fff;text-align:left}
+  #cover .sub{font-size:clamp(20px,2vw,30px);opacity:.9;margin-top:20px}
+  #cover .team{margin-top:48px;font-size:clamp(17px,1.5vw,24px);display:inline-block;border:2px solid rgba(255,255,255,.5);border-radius:40px;padding:10px 28px}
+  #cover .pin{position:absolute;right:10vw;top:22vh;width:min(22vw,300px);opacity:.9;animation:bob 3s ease-in-out infinite}
+  @keyframes bob{50%{transform:translateY(-14px)}}
+  .scroll-hint{position:absolute;bottom:5vh;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.7);font-size:15px;text-align:center;animation:hint 2s ease-in-out infinite}
+  @keyframes hint{50%{transform:translate(-50%,8px)}}
+  /* 표지 아래가 뚝 끊기지 않고 한지색으로 녹아들게 */
+  .fade-cover{height:22vh;background:linear-gradient(#142a1d,var(--hanji));margin-top:-1px}
+
+  /* ── 이용 흐름 ── */
+  .flow{display:flex;gap:18px;align-items:stretch}
+  .step{flex:1;background:var(--paper);border-radius:20px;padding:34px 26px;text-align:center;box-shadow:0 6px 24px rgba(31,61,43,.07)}
+  .step .ico{width:64px;height:64px;margin:0 auto 14px;border-radius:50%;background:var(--forest);color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800}
+  .step h3{font-size:clamp(20px,1.7vw,26px);color:var(--forest);margin-bottom:8px}
+  .step p{font-size:clamp(15px,1.2vw,19px);color:#3b3a35}
+  .arrow{align-self:center;font-size:36px;color:var(--moss)}
+
+  /* ── 데모 영역 ── */
+  #demo-map,#demo-cam{padding:5vh 7vw}
+  .demo-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:24px}
+  .demo-head h2{margin-bottom:0}
+  .btn{display:inline-flex;align-items:center;gap:8px;background:var(--forest);color:#fff;text-decoration:none;border:none;
+       border-radius:40px;padding:14px 26px;font-size:clamp(15px,1.2vw,19px);font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+  .btn:hover{background:var(--forest2)}
+  .frame{width:100%;aspect-ratio:16/9;max-height:62vh;border-radius:22px;overflow:hidden;background:#fff;
+         box-shadow:0 20px 50px rgba(31,61,43,.18);position:relative}
+  .frame iframe{width:100%;height:100%;border:0}
+
+  /* 지도 목업 */
+  .mock-map{display:flex;height:100%}
+  .mm-side{width:32%;background:var(--paper);padding:24px;display:flex;flex-direction:column;gap:14px;border-right:1px solid #e7e0cf}
+  .mm-search{background:#f1ece0;border-radius:12px;padding:12px 16px;color:var(--muted);font-size:16px}
+  .chips span{display:inline-block;font-size:14px;padding:6px 12px;border-radius:20px;margin:0 6px 6px 0;background:#eef2e8;color:var(--forest)}
+  .chips span.on{background:var(--forest);color:#fff}
+  .place{background:#fff;border:1px solid #ebe4d3;border-radius:14px;padding:14px}
+  .place b{display:block;font-size:17px;color:var(--forest)}
+  .place small{font-size:14px;color:var(--muted)}
+  .badge{font-size:12px;padding:3px 8px;border-radius:8px;margin-left:6px;vertical-align:2px}
+  .b-hid{background:#fbe6df;color:var(--vermil)}.b-known{background:#e3eefa;color:var(--sky)}
+  .mm-map{flex:1;position:relative;background:#e8efe2;overflow:hidden}
+  .mm-map svg{position:absolute;inset:0;width:100%;height:100%}
+  .route{stroke-dasharray:10 8;animation:dash 1.2s linear infinite}
+  @keyframes dash{to{stroke-dashoffset:-36}}
+  .navbar{position:absolute;left:24px;right:24px;bottom:24px;background:var(--forest);color:#fff;border-radius:16px;padding:16px 22px;display:flex;justify-content:space-between;align-items:center;font-size:18px}
+
+  /* 카메라 목업 */
+  .mock-cam{display:flex;height:100%}
+  .mc-view{flex:1.3;position:relative;background:linear-gradient(#9fb7a0,#5d7b62 60%,#8a7a5c);overflow:hidden}
+  .gate{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:46%;height:62%}
+  .scanbox{position:absolute;right:8%;top:12%;width:90px;height:90px;border:3px solid #fff;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;text-align:center}
+  .scanbox::after{content:"";position:absolute;left:6px;right:6px;height:2px;background:var(--gold);top:10%;animation:scan 1.6s ease-in-out infinite}
+  @keyframes scan{50%{top:85%}}
+  .docent{position:absolute;left:8%;bottom:0;width:22%;animation:pop 1s ease-out both}
+  @keyframes pop{from{transform:translateY(40px);opacity:0}}
+  .bubble{position:absolute;left:30%;top:16%;right:30%;background:#fff;border-radius:18px;padding:16px 18px;font-size:17px;line-height:1.5;box-shadow:0 6px 20px rgba(0,0,0,.15)}
+  .bubble small{display:block;color:var(--vermil);font-weight:700;font-size:13px;margin-bottom:4px}
+  .ar-label{position:absolute;left:16px;top:14px;background:rgba(0,0,0,.45);color:#fff;font-size:13px;padding:5px 10px;border-radius:8px}
+  .mc-side{flex:1;background:#1b2a21;color:#fff;display:flex;flex-direction:column}
+  .mc-side .lbl{padding:16px 20px;font-size:15px;opacity:.8}
+  .drone{flex:1;position:relative;perspective:700px;display:flex;align-items:center;justify-content:center}
+  .plane{width:62%;aspect-ratio:1;transform-style:preserve-3d;animation:orbit 12s linear infinite;position:relative}
+  @keyframes orbit{from{transform:rotateX(58deg) rotateZ(0)}to{transform:rotateX(58deg) rotateZ(360deg)}}
+  .plane .ground{position:absolute;inset:0;background:radial-gradient(#4f7a4f,#2f4f35);border-radius:50%}
+  .plane .pond{position:absolute;left:12%;top:15%;width:40%;height:30%;background:#4a86b5;border-radius:50%}
+  .plane .bld{position:absolute;left:52%;top:50%;width:22%;height:16%;background:#a3462f;transform:translateZ(18px);box-shadow:0 0 0 4px #6d5a3d}
+  .mc-side .ctrl{display:flex;gap:8px;padding:14px 20px}
+  .mc-side .ctrl span{font-size:13px;border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:5px 12px}
+
+  .note{margin-top:12px;font-size:15px;color:var(--muted)}
+  .link-row{display:flex;align-items:center;gap:16px;justify-content:center;font-size:clamp(17px,1.5vw,22px);font-weight:700;color:var(--forest);flex-wrap:wrap}
+  .link-row .pill{background:var(--paper);border-radius:40px;padding:14px 24px;box-shadow:0 6px 20px rgba(31,61,43,.08)}
+  .link-row .ar{color:var(--moss)}
+
+  .chain{display:flex;align-items:center;gap:14px}
+  .node{flex:1;background:var(--paper);border-radius:20px;padding:24px 20px;box-shadow:0 6px 24px rgba(31,61,43,.07);text-align:center}
+  .node .q{width:58px;height:58px;margin:0 auto 12px;border-radius:12px;border:3px solid var(--forest);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--forest)}
+  .node h3{font-size:clamp(17px,1.5vw,22px);color:var(--forest);margin-bottom:8px}
+  .node p{font-size:clamp(14px,1.1vw,17px);color:#3b3a35;line-height:1.5}
+  .node .tease{margin-top:10px;font-size:clamp(13px,1vw,16px);color:var(--vermil);font-weight:700}
+  .node.last{background:var(--forest)}.node.last h3,.node.last p{color:#fff}.node.last .q{border-color:var(--gold);color:var(--gold)}
+  .chain .ar{font-size:30px;color:var(--moss)}
+  .vs{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  .vs .card.bad{opacity:.75;border:2px dashed #cfc6b3;box-shadow:none;background:transparent}
+  .nextchip{display:inline-block;margin-top:12px;background:var(--vermil);color:#fff;font-size:15px;font-weight:700;padding:8px 16px;border-radius:30px;animation:pulse 1.6s ease-in-out infinite}
+  @keyframes pulse{50%{transform:scale(1.06)}}
+
+  /* ── 실제 작동하는 지도 ── */
+  .mapapp{display:flex;height:100%}
+  .mapapp .mm-side{width:32%;overflow:auto}
+  #map{position:absolute;inset:0;background:#e8efe2}
+  .mm-map{flex:1;position:relative}
+  .maperr{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;color:var(--muted);font-size:18px;z-index:500}
+  .place{cursor:pointer;margin-bottom:10px;transition:.2s}
+  .place.sel{border-color:var(--vermil);box-shadow:0 0 0 2px var(--vermil)}
+  .place.done b::after{content:" ✓";color:var(--moss)}
+  .chips span{cursor:pointer}
+  .navbar{z-index:600;gap:14px}
+  .mini{font-family:inherit;font-size:15px;font-weight:700;border:none;border-radius:30px;padding:9px 16px;cursor:pointer;background:var(--forest);color:#fff}
+  .mini.light{background:#fff;color:var(--forest)}
+  .mini.dark{background:transparent;border:1px solid rgba(255,255,255,.35);font-weight:500}
+  .btn.ghost{background:transparent;color:var(--forest);border:2px solid var(--forest)}
+  .pin-ico{width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+  .me-ico{width:18px;height:18px;border-radius:50%;background:#3b7fc4;border:4px solid #fff;box-shadow:0 0 0 6px rgba(59,127,196,.25)}
+
+  /* ── 실제 작동하는 카메라 ── */
+  .camapp{display:flex;height:100%}
+  .camapp .mc-view{background:#1b2a21}
+  #video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .cam-idle{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;color:rgba(255,255,255,.75);font-size:20px;line-height:1.6}
+  .scanbox{left:50%;top:50%;right:auto;width:200px;height:200px;margin:-100px 0 0 -100px;display:none}
+  .scanbox.on{display:block}
+  .docent-layer{position:absolute;inset:0;display:none}
+  .docent-layer.on{display:block}
+  .docent-layer .docent{left:6%;width:20%}
+  .docent-layer .bubble{left:28%;right:6%;top:10%;font-size:clamp(15px,1.3vw,19px)}
+  .dbtns{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center}
+  .dbtns .mini,.dbtns .nextchip{line-height:1.2;padding:9px 16px;margin:0}
+  .dbtns .nextchip{margin-left:6px}
+  .camapp .mc-view{border-right:1px solid rgba(255,255,255,.12)}
+  .docent-layer.on ~ .cam-idle,.cam-idle.hide{display:none!important}
+  .nextchip{position:static;font-family:inherit;border:none;cursor:pointer;animation:pulse 1.6s ease-in-out infinite}
+  .plane.paused{animation-play-state:paused}
+  .drone.zoom .plane{width:85%}
+  .progress{display:flex;gap:8px;justify-content:center;padding:6px}
+  .progress i{width:34px;height:6px;border-radius:3px;background:rgba(255,255,255,.2)}
+  .progress i.on{background:var(--gold)}
+
+  /* ── 시연용 QR ── */
+  .qrgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  .qrcard{background:#fff;border-radius:20px;padding:24px;text-align:center;box-shadow:0 6px 24px rgba(31,61,43,.07)}
+  .qrcard .qr{width:180px;height:180px;margin:0 auto 12px}
+  .qrcard .qr img,.qrcard .qr canvas{width:100%!important;height:100%!important}
+  .qrcard b{font-size:20px;color:var(--forest)}
+  @media print{body{overflow:visible}section{display:none}section[data-title="시연용 QR"]{display:flex}#dots,#bar{display:none}}
+  ul.clean{list-style:none}
+  ul.clean li{padding-left:34px;position:relative;margin-bottom:16px}
+  ul.clean li::before{content:"";position:absolute;left:4px;top:.6em;width:14px;height:14px;border-radius:50%;background:var(--moss)}
+
+  #end{background:linear-gradient(var(--hanji),var(--forest) 35%);color:#fff;text-align:center}
+
+  /* 진행바, 목차 점 */
+  #bar{position:fixed;left:0;top:0;height:4px;background:var(--gold);width:0;z-index:20}
+  #dots{position:fixed;right:22px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:10px;z-index:20}
+  #dots a{width:10px;height:10px;border-radius:50%;background:rgba(31,61,43,.25);box-shadow:0 0 0 1.5px rgba(255,255,255,.6);transition:.3s}
+  #dots a.on{background:var(--vermil);transform:scale(1.4)}
+</style>
+<!-- 지도(Leaflet + OpenStreetMap), QR 인식(jsQR), QR 만들기(qrcodejs) — 키 없이 무료 -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════
+     ★ 이야기 코스 데이터 — 여기만 고치면 지도·QR·도슨트가 모두 바뀝니다.
+       lat/lng : 위도/경도 (카카오맵·네이버지도에서 장소를 우클릭하면 확인 가능)
+       type    : "hidden"(숨은 명소) 또는 "known"(알려진 문화재)
+       story   : AR 도슨트가 들려줄 이야기 (끝을 살짝 끊어 다음 장소로 유도)
+       tease   : 다음 장소를 알려주는 한 줄
+     ※ 아래 장소·좌표·이야기는 예시입니다. 실제 내용으로 바꿔 주세요.
+   ══════════════════════════════════════════════ -->
+<script>
+  const STOPS = [
+    { id:1, name:"의림지", type:"known", lat:37.1812, lng:128.2125,
+      story:"이 연못은 아주 오래전 사람들이 힘을 모아 만든 저수지예요. 그런데 이 둑을 쌓던 날, 한 사람이 남긴 약속이 있었답니다. 그 약속의 이야기는…",
+      tease:"저 언덕 위 정자에 가면 들려드릴게요." },
+    { id:2, name:"언덕 위 정자 (예시)", type:"hidden", lat:37.1838, lng:128.2148,
+      story:"잘 찾아오셨어요! 약속을 남긴 사람은 매일 이 정자에 올라 연못을 내려다봤대요. 그리고 마지막 날, 무언가를 숲속에 묻어 두었다고 해요.",
+      tease:"마지막 조각은 숲길 끝 바위 옆에 있어요." },
+    { id:3, name:"숲길 끝 바위 (예시)", type:"hidden", lat:37.1795, lng:128.2168,
+      story:"드디어 마지막 장소예요. 그가 묻어 둔 건 보물이 아니라, 이 마을을 지켜 달라는 편지였어요. 그 마음이 지금의 의림지를 지켜 온 거랍니다.",
+      tease:"" }
+  ];
+  const START = { lat:37.1790, lng:128.2100, name:"출발 지점" };  // GPS를 못 쓸 때 쓰는 기본 출발점
+</script>
+
+<div id="bar"></div>
+<nav id="dots"></nav>
+
+<!-- 1. 표지 -->
+<section id="cover" data-title="표지">
+  <svg class="pin" viewBox="0 0 100 100"><path d="M50 6C32 6 18 20 18 38c0 24 32 56 32 56s32-32 32-56C82 20 68 6 50 6z" fill="none" stroke="#d9a441" stroke-width="4"/><circle cx="50" cy="38" r="12" fill="#d9a441"/></svg>
+  <div class="inner">
+    <div class="tag rv" style="color:var(--gold)">2026 제11회 충북 소프트웨어 해커톤</div>
+    <h1 class="rv d1">어디가노</h1>
+    <p class="sub rv d2">QR 하나가 다음 장소로 이끄는, 끝나지 않는 우리 동네 이야기</p>
+    <div class="rv d3"><span class="team">팀 세명, 고!</span></div>
+  </div>
+  <div class="scroll-hint">아래로 스크롤<br>⌄</div>
+</section>
+<div class="fade-cover"></div>
+
+<!-- 2. 문제 제기 -->
+<section class="bg-a" data-title="문제 제기">
+  <div class="inner">
+    <div class="tag rv">01 · 문제 제기</div>
+    <h2 class="rv d1">좋은 곳은 있는데,<br>아무도 모릅니다</h2>
+    <p class="quote rv d2">제천 의림지의 <span class="hl">삼림욕장</span>처럼 잘 만들어 둔 명소도<br>홍보가 없으면 지역 주민조차 모릅니다.</p>
+    <div class="grid g3" style="margin-top:6vh">
+      <div class="card rv d2"><h3>홍보 부족</h3><p>지역 명소·문화유산 정보가 거의 알려지지 않음</p></div>
+      <div class="card rv d3"><h3>낮은 관심</h3><p>주민과 관광객 모두 존재 자체를 모름</p></div>
+      <div class="card rv d4"><h3>정보 격차</h3><p>노인·어린이·외국인은 정보를 찾기 더 어려움</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 3. 목표 -->
+<section class="bg-ab" data-title="목표">
+  <div class="inner">
+    <div class="tag rv">02 · 제작 배경 및 목표</div>
+    <h2 class="rv d1">숨은 명소를 알리고,<br>지역을 살리는 소프트웨어</h2>
+    <div class="grid g3">
+      <div class="card rv d2"><div class="num">01</div><h3>널리 알리기</h3><p>문화유산과 지역 관광지를 소개하고 홍보</p></div>
+      <div class="card rv d3"><div class="num">02</div><h3>누구나 쉽게</h3><p>남녀노소 가리지 않는 사용자 친화적 설계</p></div>
+      <div class="card rv d4"><div class="num">03</div><h3>지역 살리기</h3><p>지역 마케팅으로 경제 활성화·지역 소멸 방지</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 4. 서비스 개요 -->
+<section class="bg-b" data-title="서비스 개요">
+  <div class="inner">
+    <div class="tag rv">03 · 서비스 개요</div>
+    <h2 class="rv d1">어디가노는?</h2>
+    <p class="quote rv d2"><span class="hl">지도</span>로 숨은 문화재를 찾아가고,<br>도착하면 <span class="hl">카메라</span>로 AR 도슨트의 설명을 듣는 서비스</p>
+    <div class="grid g2" style="margin-top:6vh">
+      <div class="card rv d3"><div class="num">MAP</div><h3>기능 1 · 지도 내비게이션</h3><p>숨겨진 문화재와 알려진 문화재를 지도에서 찾고, 최적 경로로 길 안내</p></div>
+      <div class="card rv d4"><div class="num">CAM</div><h3>기능 2 · 카메라</h3><p>QR을 비추면 AR로 AI 도슨트가 나타나 설명하고, 드론 항공샷 3D 시뮬레이션 제공</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 핵심 아이디어 1: 왜 -->
+<section class="bg-b" data-title="핵심 아이디어">
+  <div class="inner">
+    <div class="tag rv">핵심 아이디어</div>
+    <h2 class="rv d1">보상 때문이 아니라,<br><span class="hl">궁금해서</span> 다음 장소로 갑니다</h2>
+    <div class="vs">
+      <div class="card bad rv d2"><h3>기존 방식</h3><p>스탬프·칭호·도감 채우기<br>→ 보상이 끝나면 동기도 끝남</p></div>
+      <div class="card rv d3"><h3>어디가노</h3><p>이야기가 한 장소에서 끝나지 않음<br>→ 뒷이야기가 궁금해서 스스로 다음 장소로</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 핵심 아이디어 2: 이어지는 QR -->
+<section class="bg-ba" data-title="이어지는 이야기">
+  <div class="inner">
+    <div class="tag rv">핵심 아이디어 · 이어지는 이야기</div>
+    <h2 class="rv d1">QR이 다음 QR을 부릅니다</h2>
+    <div class="chain">
+      <div class="node rv d1"><div class="q">QR 1</div><h3>첫 번째 장소</h3><p>AR 도슨트가 이야기를 시작</p><div class="tease">"비밀은 저 정자에…"</div></div>
+      <div class="ar rv d2">→</div>
+      <div class="node rv d2"><div class="q">QR 2</div><h3>두 번째 장소</h3><p>이야기가 이어지고 새 단서 등장</p><div class="tease">"마지막 조각은 연못가에…"</div></div>
+      <div class="ar rv d3">→</div>
+      <div class="node rv d3"><div class="q">QR 3</div><h3>세 번째 장소</h3><p>흩어진 단서가 하나로 모임</p><div class="tease">"이제 진실을 들려줄게요"</div></div>
+      <div class="ar rv d4">→</div>
+      <div class="node last rv d4"><div class="q">★</div><h3>이야기의 끝</h3><p>전체 이야기와 드론 항공샷으로 코스 전체를 한눈에</p></div>
+    </div>
+    <p class="note rv d4">※ 이야기 내용과 코스는 예시입니다. 실제 지역 전설·역사로 채워 주세요.</p>
+  </div>
+</section>
+
+<!-- 5. 이용 흐름 -->
+<section class="bg-ba" data-title="이용 흐름">
+  <div class="inner">
+    <div class="tag rv">04 · 이용 흐름</div>
+    <h2 class="rv d1">3단계면 충분합니다</h2>
+    <div class="flow">
+      <div class="step rv d2"><div class="ico">1</div><h3>지역 진입</h3><p>특정 경계에 들어서면 GPS가 감지해 문화재 추천</p></div>
+      <div class="arrow rv d2">→</div>
+      <div class="step rv d3"><div class="ico">2</div><h3>지도로 길 안내</h3><p>선택한 문화재까지 최적 경로를 내비게이션으로 안내</p></div>
+      <div class="arrow rv d3">→</div>
+      <div class="step rv d4"><div class="ico">3</div><h3>QR → 다음 장소로</h3><p>AR 도슨트가 이야기를 들려주고, 뒷이야기는 다음 장소의 QR에</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. 시연 1: 지도 (실제 작동) -->
+<section class="bg-a" id="demo-map" data-title="시연 · 지도">
+  <div class="inner">
+    <div class="demo-head">
+      <div><div class="tag rv">시연 1 · 지도</div><h2 class="rv d1">문화재 찾기 내비게이션</h2></div>
+      <span class="rv d1 muted" style="font-size:16px">장소를 누르면 길 안내가 시작돼요</span>
+    </div>
+    <div class="frame rv d2 interactive">
+      <div class="mapapp">
+        <div class="mm-side">
+          <div class="chips" id="chips"><span class="on" data-f="all">전체</span><span data-f="hidden">숨은 명소</span><span data-f="known">알려진 문화재</span></div>
+          <div id="placeList"></div>
+          <button class="mini" id="locBtn">◎ 내 위치로 출발</button>
+        </div>
+        <div class="mm-map"><div id="map"></div>
+          <div class="maperr" id="mapErr">지도를 불러오지 못했어요.<br>인터넷 연결을 확인해 주세요.</div>
+          <div class="navbar" id="navbar"><span id="navText">장소를 선택하세요</span><button class="mini light" id="goBtn">길 안내 시작</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 지도 → 카메라 연결 -->
+<section class="bg-ab" data-title="연결">
+  <div class="inner">
+    <div class="link-row rv">
+      <span class="pill">지도에서 검색</span><span class="ar">→</span>
+      <span class="pill">길 안내</span><span class="ar">→</span>
+      <span class="pill">현장 도착</span><span class="ar">→</span>
+      <span class="pill" style="background:var(--forest);color:#fff">카메라로 QR 스캔</span><span class="ar">→</span>
+      <span class="pill" style="background:var(--vermil);color:#fff">다음 장소 단서 ↺</span>
+    </div>
+  </div>
+</section>
+
+<!-- 7. 시연 2: 카메라 (실제 작동) -->
+<section class="bg-b" id="demo-cam" data-title="시연 · 카메라">
+  <div class="inner">
+    <div class="demo-head">
+      <div><div class="tag rv">시연 2 · 카메라</div><h2 class="rv d1">QR → AR AI 도슨트 + 드론 항공샷</h2></div>
+      <div class="rv d1" style="display:flex;gap:10px">
+        <button class="btn" id="camBtn">● 카메라 켜기</button>
+        <button class="btn ghost" id="simBtn">QR 없이 시연</button>
+      </div>
+    </div>
+    <div class="frame rv d2 interactive">
+      <div class="camapp">
+        <div class="mc-view">
+          <video id="video" playsinline muted></video>
+          <canvas id="qrCanvas" hidden></canvas>
+          <div class="cam-idle" id="camIdle">‘카메라 켜기’를 누르고<br>현장의 QR코드를 비춰 주세요</div>
+          <span class="ar-label" id="camLabel">○ 카메라 꺼짐</span>
+          <div class="scanbox" id="scanbox"></div>
+          <div class="docent-layer" id="docentLayer">
+            <svg class="docent" viewBox="0 0 100 200"><ellipse cx="50" cy="196" rx="34" ry="5" fill="rgba(0,0,0,.25)"/><path d="M22 195 L30 90 Q50 80 70 90 L78 195z" fill="#c7b38f"/><circle cx="50" cy="66" r="18" fill="#f1d3b3"/><rect x="28" y="40" width="44" height="6" rx="3" fill="#222"/><rect x="38" y="22" width="24" height="20" rx="4" fill="#222"/><path d="M70 100 Q88 110 92 90" stroke="#c7b38f" stroke-width="10" fill="none" stroke-linecap="round"/></svg>
+            <div class="bubble"><small id="dName">AI 도슨트</small><span id="dText"></span>
+              <div class="dbtns"><button class="mini" id="speakBtn">🔊 듣기</button><button class="nextchip" id="nextBtn">다음 장소 →</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="mc-side">
+          <div class="lbl" id="droneLbl">드론 항공샷 · 3D 시뮬레이션</div>
+          <div class="drone"><div class="plane" id="plane"><div class="ground"></div><div class="pond"></div><div class="bld"></div></div></div>
+          <div class="progress" id="progress"></div>
+          <div class="ctrl"><button class="mini dark" id="rotBtn">⟲ 회전 멈춤</button><button class="mini dark" id="zoomBtn">＋ 확대</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8. 차별점 -->
+<section class="bg-ba" data-title="차별점">
+  <div class="inner">
+    <div class="tag rv">05 · 핵심 차별점</div>
+    <h2 class="rv d1">앱 설치 없이, 누구나</h2>
+    <div class="grid g2">
+      <div class="card rv d2"><h3>다운로드 없음</h3><p>QR 스캔 한 번으로 웹 브라우저에서 바로 실행</p></div>
+      <div class="card rv d2"><h3>낮은 진입장벽</h3><p>노인, 어린이, 외국인도 쉽게 사용</p></div>
+      <div class="card rv d3"><h3>궁금증이 동기</h3><p>보상 없이도 뒷이야기가 궁금해 스스로 다음 명소로 이동</p></div>
+      <div class="card rv d3"><h3>현장 몰입감</h3><p>AR 도슨트와 드론 항공샷으로 생생하게 전달</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 9. 기술 · 개발 방법 -->
+<section class="bg-a" data-title="기술 · 개발">
+  <div class="inner">
+    <div class="tag rv">06 · 기술 구성과 개발 방법</div>
+    <h2 class="rv d1">어떻게 만드나요?</h2>
+    <div class="grid g2" style="gap:24px 60px">
+      <ul class="clean rv d2">
+        <li><b>지도</b> — GPS 위치 인식, 지도·길 안내 API</li>
+        <li><b>카메라</b> — QR 인식, WebAR, AI 도슨트</li>
+        <li><b>3D</b> — 드론 항공샷 시뮬레이션</li>
+        <li><b>하드웨어</b> — 아두이노 활용</li>
+      </ul>
+      <div class="rv d3">
+        <div class="card" style="margin-bottom:18px"><h3>애자일</h3><p>짧은 주기로 만들고 사용자 의견을 바로 반영</p></div>
+        <div class="card"><h3>폭포수 모델 참고</h3><p>분석 → 설계 → 구현 → 테스트로 큰 일정 관리</p></div>
+      </div>
+    </div>
+    <p class="note rv d4">※ 사용할 API·라이브러리 이름은 팀에서 확정한 뒤 채워 넣으세요.</p>
+  </div>
+</section>
+
+<!-- 10. 기대 효과 · 향후 계획 -->
+<section class="bg-ab" data-title="기대 효과">
+  <div class="inner">
+    <div class="tag rv">07 · 기대 효과와 향후 계획</div>
+    <h2 class="rv d1">지역도, 사람도 함께</h2>
+    <div class="grid g3">
+      <div class="card rv d2"><div class="num">↑</div><h3>인지도 · 방문율</h3><p>숨겨진 문화유산과 관광명소의 인지도와 방문율 상승</p></div>
+      <div class="card rv d3"><div class="num">♿</div><h3>정보 접근성</h3><p>노인·어린이·외국인도 제약 없이 관광 정보 이용</p></div>
+      <div class="card rv d4"><div class="num">₩</div><h3>지역 경제</h3><p>지역 마케팅으로 경제 활성화·지역 소멸 방지</p></div>
+    </div>
+    <p class="quote rv d4" style="margin-top:6vh;font-size:clamp(18px,1.8vw,28px)">한 곳만 보고 떠나던 관광객이 코스 전체를 걷는 관광객으로</p>
+  </div>
+</section>
+
+<!-- 부록: 시연용 QR -->
+<section class="bg-a" data-title="시연용 QR">
+  <div class="inner">
+    <div class="tag rv">부록 · 시연용 QR</div>
+    <h2 class="rv d1">출력해서 하드보드지에 붙이세요</h2>
+    <div class="qrgrid rv d2 interactive" id="qrGrid"></div>
+    <p class="note rv d3">※ 휴대폰 기본 카메라로 찍으면 이 발표 사이트의 해당 장소 이야기로 바로 열립니다.</p>
+  </div>
+</section>
+
+<!-- 11. 마무리 -->
+<section id="end" data-title="마무리">
+  <div class="inner">
+    <h1 class="rv" style="font-size:clamp(56px,7vw,110px)">감사합니다</h1>
+    <p class="rv d1" style="font-size:clamp(20px,2vw,30px);margin-top:20px;opacity:.9">어디가노 · 팀 세명, 고!</p>
+    <p class="rv d2" style="font-size:clamp(18px,1.6vw,24px);margin-top:40px;color:var(--gold);font-weight:700">Q &amp; A</p>
+  </div>
+</section>
+
+<script>
+  /* ── 아래에서 올라오고, 지나가면 위로 쓸려 사라지는 효과 ── */
+  const io=new IntersectionObserver(entries=>{
+    entries.forEach(en=>{
+      const el=en.target;
+      if(en.isIntersecting){el.classList.add('on');el.classList.remove('gone');}
+      else if(en.boundingClientRect.top<0){el.classList.remove('on');el.classList.add('gone');}  // 위로 지나감
+      else{el.classList.remove('on','gone');}                                                  // 아직 아래
+    });
+  },{threshold:0.15,rootMargin:'-8% 0px -8% 0px'});
+  document.querySelectorAll('.rv').forEach(el=>io.observe(el));
+
+
+  /* ══ 이야기 진행 상태 ══ */
+  let progressIdx=0;              // 지금까지 들은 마지막 장소 (0이면 아직 없음)
+  let selected=null;              // 지도에서 고른 장소
+
+  /* ══ 기능 1: 지도 ══════════════════════════════════════ */
+  let map=null, markers={}, meMarker=null, routeLine=null, walker=null, me={...START};
+  const dist=(a,b)=>{const R=6371e3,r=Math.PI/180,dLa=(b.lat-a.lat)*r,dLo=(b.lng-a.lng)*r;
+    const x=Math.sin(dLa/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dLo/2)**2;return 2*R*Math.asin(Math.sqrt(x));};
+  const fmt=m=>m<1000?Math.round(m)+'m':(m/1000).toFixed(1)+'km';
+  const walkMin=m=>Math.max(1,Math.round(m/75));     // 걸음 속도 약 4.5km/h
+
+  function renderList(filter='all'){
+    const box=document.getElementById('placeList');box.innerHTML='';
+    STOPS.filter(s=>filter==='all'||s.type===filter).forEach(s=>{
+      const d=dist(me,s);
+      const el=document.createElement('div');
+      el.className='place'+(selected&&selected.id===s.id?' sel':'')+(s.id<=progressIdx?' done':'');
+      el.innerHTML='<b>'+s.name+' <span class="badge '+(s.type==='hidden'?'b-hid">숨은 명소':'b-known">알려진 문화재')+'</span></b><small>'+fmt(d)+' · 도보 '+walkMin(d)+'분</small>';
+      el.onclick=()=>selectStop(s);
+      box.appendChild(el);
+    });
+  }
+  document.querySelectorAll('#chips span').forEach(c=>c.onclick=()=>{
+    document.querySelectorAll('#chips span').forEach(x=>x.classList.remove('on'));c.classList.add('on');
+    renderList(c.dataset.f);
+    if(map)STOPS.forEach(s=>{const show=c.dataset.f==='all'||s.type===c.dataset.f;show?markers[s.id].addTo(map):markers[s.id].remove();});
+  });
+
+  function pinIcon(color){return L.divIcon({className:'',html:'<div class="pin-ico" style="background:'+color+'"></div>',iconSize:[30,30],iconAnchor:[15,30]});}
+  function initMap(){
+    if(map||typeof L==='undefined'){if(typeof L==='undefined')document.getElementById('mapErr').style.display='flex';return;}
+    map=L.map('map',{zoomControl:true,attributionControl:true}).setView([STOPS[0].lat,STOPS[0].lng],15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
+    STOPS.forEach(s=>{markers[s.id]=L.marker([s.lat,s.lng],{icon:pinIcon(s.type==='hidden'?'#c8553d':'#3b7fc4')}).addTo(map)
+      .bindTooltip(s.name,{direction:'top',offset:[0,-28]}).on('click',()=>selectStop(s));});
+    meMarker=L.marker([me.lat,me.lng],{icon:L.divIcon({className:'',html:'<div class="me-ico"></div>',iconSize:[18,18],iconAnchor:[9,9]})}).addTo(map);
+    map.fitBounds(L.latLngBounds([...STOPS.map(s=>[s.lat,s.lng]),[me.lat,me.lng]]).pad(0.25));
+  }
+  function selectStop(s){
+    selected=s;renderList(document.querySelector('#chips .on').dataset.f);
+    const d=dist(me,s);
+    document.getElementById('navText').textContent=s.name+'까지 '+fmt(d)+' · 도보 '+walkMin(d)+'분';
+    if(!map)return;
+    if(routeLine)routeLine.remove(); if(walker){walker.remove();walker=null;}
+    routeLine=L.polyline([[me.lat,me.lng],[s.lat,s.lng]],{color:'#3b7fc4',weight:6,dashArray:'10 10'}).addTo(map);
+    map.fitBounds(routeLine.getBounds().pad(0.4));
+  }
+  document.getElementById('goBtn').onclick=()=>{
+    if(!selected){document.getElementById('navText').textContent='먼저 장소를 선택하세요';return;}
+    if(!map)return;
+    const s=selected,from={...me},t0=performance.now(),T=4000;
+    if(walker)walker.remove();
+    walker=L.circleMarker([from.lat,from.lng],{radius:9,color:'#fff',weight:3,fillColor:'#d9a441',fillOpacity:1}).addTo(map);
+    (function step(now){const p=Math.min(1,(now-t0)/T);
+      const pos=[from.lat+(s.lat-from.lat)*p,from.lng+(s.lng-from.lng)*p];walker.setLatLng(pos);
+      const left=dist({lat:pos[0],lng:pos[1]},s);
+      document.getElementById('navText').textContent=p<1?'➜ 안내 중 · 남은 거리 '+fmt(left):'🎉 '+s.name+' 도착! 이제 카메라로 QR을 비춰 보세요';
+      if(p<1)requestAnimationFrame(step);else{me={lat:s.lat,lng:s.lng};meMarker.setLatLng(pos);}
+    })(t0);
+  };
+  document.getElementById('locBtn').onclick=()=>{
+    if(!navigator.geolocation){alert('이 기기는 위치 정보를 지원하지 않아요.');return;}
+    navigator.geolocation.getCurrentPosition(p=>{
+      me={lat:p.coords.latitude,lng:p.coords.longitude};
+      if(meMarker)meMarker.setLatLng([me.lat,me.lng]);renderList(document.querySelector('#chips .on').dataset.f);
+      if(selected)selectStop(selected);else if(map)map.setView([me.lat,me.lng],15);
+    },()=>alert('위치를 가져오지 못했어요. 기본 출발점을 사용합니다.'),{enableHighAccuracy:true,timeout:8000});
+  };
+  renderList();
+
+  /* ══ 기능 2: 카메라 · QR · AR 도슨트 ══════════════════════ */
+  const video=document.getElementById('video'),cvs=document.getElementById('qrCanvas'),ctx=cvs.getContext('2d',{willReadFrequently:true});
+  let stream=null,scanning=false,typing=null,lastStop=null;
+  const progEl=document.getElementById('progress');
+  STOPS.forEach(()=>progEl.appendChild(document.createElement('i')));
+
+  async function startCam(){
+    if(stream){stopCam();return;}
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){alert('카메라를 쓸 수 없어요. https 주소(GitHub Pages)에서 열어 주세요.');return;}
+    try{
+      stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});
+      video.srcObject=stream;await video.play();
+      document.getElementById('camIdle').style.display='none';
+      document.getElementById('camLabel').textContent='● AR 카메라 · QR을 비춰 주세요';
+      document.getElementById('camBtn').textContent='■ 카메라 끄기';
+      document.getElementById('scanbox').classList.add('on');
+      scanning=true;requestAnimationFrame(scan);
+    }catch(err){alert('카메라 권한이 필요해요. 브라우저 설정에서 카메라를 허용해 주세요.');}
+  }
+  function stopCam(){
+    scanning=false;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+    video.srcObject=null;document.getElementById('camIdle').style.display='flex';
+    document.getElementById('camLabel').textContent='○ 카메라 꺼짐';
+    document.getElementById('camBtn').textContent='● 카메라 켜기';
+    document.getElementById('scanbox').classList.remove('on');
+  }
+  function parseQR(text){
+    let m=text.match(/EODIGANO-(\d+)/i)||text.match(/[?&#]stop=(\d+)/);
+    return m?STOPS.find(s=>s.id===+m[1]):null;
+  }
+  function scan(){
+    if(!scanning)return;
+    if(video.readyState>=2&&typeof jsQR!=='undefined'){
+      const w=480,h=Math.round(w*video.videoHeight/video.videoWidth)||360;
+      cvs.width=w;cvs.height=h;ctx.drawImage(video,0,0,w,h);
+      const code=jsQR(ctx.getImageData(0,0,w,h).data,w,h,{inversionAttempts:'dontInvert'});
+      if(code){const s=parseQR(code.data);if(s&&(!lastStop||s.id!==lastStop.id))showDocent(s);}
+    }
+    setTimeout(()=>requestAnimationFrame(scan),120);
+  }
+  function showDocent(s){
+    lastStop=s;progressIdx=Math.max(progressIdx,s.id);renderList(document.querySelector('#chips .on').dataset.f);
+    [...progEl.children].forEach((b,i)=>b.classList.toggle('on',i<progressIdx));
+    const layer=document.getElementById('docentLayer');layer.classList.remove('on');void layer.offsetWidth;layer.classList.add('on');
+    document.getElementById('scanbox').classList.remove('on');document.getElementById('camIdle').classList.add('hide');
+    document.getElementById('dName').textContent='AI 도슨트 · '+s.name;
+    document.getElementById('droneLbl').textContent='드론 항공샷 · '+s.name;
+    const next=STOPS.find(x=>x.id===s.id+1);
+    const full=s.story+(s.tease?' '+s.tease:'');
+    const nb=document.getElementById('nextBtn');
+    nb.textContent=next?'다음 장소 · '+next.name+' '+fmt(dist(s,next))+' →':'🎉 이야기 완성! 처음부터';
+    const el=document.getElementById('dText');el.textContent='';clearInterval(typing);let k=0;
+    typing=setInterval(()=>{el.textContent=full.slice(0,++k);if(k>=full.length)clearInterval(typing);},45);
+  }
+  document.getElementById('camBtn').onclick=startCam;
+  document.getElementById('simBtn').onclick=()=>{const n=lastStop?STOPS.find(x=>x.id===lastStop.id+1)||STOPS[0]:STOPS[0];showDocent(n);};
+  document.getElementById('nextBtn').onclick=()=>{
+    const next=lastStop&&STOPS.find(x=>x.id===lastStop.id+1);
+    if(!next){progressIdx=0;lastStop=null;me={...START};if(meMarker)meMarker.setLatLng([me.lat,me.lng]);
+      document.getElementById('docentLayer').classList.remove('on');[...progEl.children].forEach(b=>b.classList.remove('on'));renderList();return;}
+    me={lat:lastStop.lat,lng:lastStop.lng};if(meMarker)meMarker.setLatLng([me.lat,me.lng]);
+    goTo(secs.indexOf(document.getElementById('demo-map')));
+    setTimeout(()=>selectStop(next),DURATION+50);
+  };
+  document.getElementById('speakBtn').onclick=()=>{
+    if(!('speechSynthesis' in window)||!lastStop)return;speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(lastStop.story+' '+lastStop.tease);u.lang='ko-KR';u.rate=1;speechSynthesis.speak(u);
+  };
+  document.getElementById('rotBtn').onclick=e=>{const p=document.getElementById('plane');p.classList.toggle('paused');e.target.textContent=p.classList.contains('paused')?'⟲ 회전':'⟲ 회전 멈춤';};
+  document.getElementById('zoomBtn').onclick=e=>{const d=document.querySelector('.drone');d.classList.toggle('zoom');e.target.textContent=d.classList.contains('zoom')?'－ 축소':'＋ 확대';};
+
+  /* ══ 시연용 QR 만들기 (휴대폰 카메라로 찍으면 이 사이트의 해당 장소로) ══ */
+  (function(){
+    const grid=document.getElementById('qrGrid'),base=location.origin+location.pathname;
+    STOPS.forEach(s=>{const c=document.createElement('div');c.className='qrcard';
+      c.innerHTML='<div class="qr"></div><b>QR '+s.id+'</b><br><small class="muted">'+s.name+'</small>';grid.appendChild(c);
+      const url=(location.protocol.startsWith('http')?base:'EODIGANO-'+s.id)+(location.protocol.startsWith('http')?'?stop='+s.id:'');
+      if(typeof QRCode!=='undefined')new QRCode(c.querySelector('.qr'),{text:url,width:360,height:360,correctLevel:QRCode.CorrectLevel.M});
+      else c.querySelector('.qr').innerHTML='<div style="padding-top:70px;color:#999">인터넷 연결 시 표시</div>';});
+  })();
+
+  /* ══ 한 번 스크롤 = 한 장 이동 ══════════════════════════
+     휠을 조금 굴리든 세게 굴리든, 한 동작이면 딱 한 장만 넘어갑니다.
+     이동하는 동안과 손을 뗀 직후의 관성 스크롤은 무시합니다.            */
+  const secs=[...document.querySelectorAll('section')];
+  const dots=document.getElementById('dots');
+  const DURATION=900;      // 한 장 넘어가는 시간(ms)
+  const QUIET=180;         // 이만큼 휠 입력이 멈춰야 '새 스크롤 동작'으로 봄(ms)
+  let cur=0, moving=false, lastWheel=0;
+
+  secs.forEach((s,i)=>{const a=document.createElement('a');a.href='#';a.title=s.dataset.title||'';
+    a.onclick=e=>{e.preventDefault();goTo(i);};dots.appendChild(a);});
+
+  function ease(x){return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;}
+  function goTo(n){
+    n=Math.max(0,Math.min(secs.length-1,n));
+    if(n===cur&&Math.abs(scrollY-secs[n].offsetTop)<2)return;
+    cur=n;moving=true;update();
+    onEnter(secs[n]);
+    const from=scrollY,to=secs[n].offsetTop,t0=performance.now();
+    (function step(now){
+      const p=Math.min(1,(now-t0)/DURATION);
+      scrollTo(0,from+(to-from)*ease(p));
+      if(p<1)requestAnimationFrame(step);else moving=false;
+    })(t0);
+  }
+  function onEnter(sec){
+    if(sec.id==='demo-map'){initMap();setTimeout(()=>map&&map.invalidateSize(),DURATION+20);}
+    if(sec.id!=='demo-cam'&&stream)stopCam();       // 카메라 장을 벗어나면 카메라 끄기
+  }
+  function update(){
+    document.getElementById('bar').style.width=((cur+1)/secs.length*100)+'%';
+    [...dots.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+  }
+
+  /* 마우스 휠 · 트랙패드 */
+  const inApp=e=>e.target.closest&&e.target.closest('.interactive');
+  addEventListener('wheel',e=>{
+    if(inApp(e))return;                                   // 지도 안에서는 휠 = 지도 확대/축소
+    e.preventDefault();
+    const now=performance.now(), gap=now-lastWheel; lastWheel=now;
+    if(moving||gap<QUIET||Math.abs(e.deltaY)<4)return;   // 이동 중이거나 같은 동작의 연속 입력이면 무시
+    goTo(cur+(e.deltaY>0?1:-1));
+  },{passive:false});
+
+  /* 터치(태블릿) : 위로 밀면 다음 장 */
+  let ty=null;
+  addEventListener('touchstart',e=>{ty=inApp(e)?null:e.touches[0].clientY;},{passive:true});
+  addEventListener('touchmove',e=>{if(!inApp(e))e.preventDefault();},{passive:false});   // 지도·카메라 안에서는 손가락으로 지도 조작
+  addEventListener('touchend',e=>{if(ty===null||moving)return;const d=ty-e.changedTouches[0].clientY;
+    if(Math.abs(d)>40)goTo(cur+(d>0?1:-1));ty=null;});
+
+  /* 키보드 : ↓ / 스페이스 / PageDown = 다음, ↑ / PageUp = 이전, Home / End, F = 전체화면 */
+  addEventListener('keydown',e=>{
+    if(['ArrowDown','PageDown',' ','ArrowRight'].includes(e.key)){e.preventDefault();if(!moving)goTo(cur+1);}
+    else if(['ArrowUp','PageUp','ArrowLeft'].includes(e.key)){e.preventDefault();if(!moving)goTo(cur-1);}
+    else if(e.key==='Home'){e.preventDefault();goTo(0);}
+    else if(e.key==='End'){e.preventDefault();goTo(secs.length-1);}
+    else if(e.key==='f'||e.key==='F'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();}
+  });
+
+  /* 버튼 포커스 등으로 화면이 어긋나면 현재 장에 다시 맞춤 */
+  addEventListener('scroll',()=>{if(!moving&&Math.abs(scrollY-secs[cur].offsetTop)>2)scrollTo(0,secs[cur].offsetTop);});
+  /* 창 크기가 바뀌면 현재 장에 다시 맞춤 */
+  addEventListener('resize',()=>scrollTo(0,secs[cur].offsetTop));
+  scrollTo(0,0);update();
+  const qs=new URLSearchParams(location.search).get('stop');
+  if(qs){const s=STOPS.find(x=>x.id===+qs);if(s){const ci=secs.indexOf(document.getElementById('demo-cam'));
+    cur=ci;scrollTo(0,secs[ci].offsetTop);update();document.querySelectorAll('#demo-cam .rv').forEach(e=>e.classList.add('on'));showDocent(s);}}
+</script>
+</body>
+</html>
