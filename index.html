@@ -83,6 +83,8 @@
   /* ── 문제 제기 ── */
   .problem{display:grid;grid-template-columns:1.05fr 1fr;gap:5vw;align-items:end}
 
+  .src{position:absolute;left:calc(var(--rail) + 4vw);right:7vw;bottom:3.2vh;font-size:12px;line-height:1.6;color:#8a88a3;max-width:none}
+  .facts.f3{grid-template-columns:repeat(3,1fr)}
   /* ── 핵심 아이디어: 지운 것과 남긴 것 ── */
   .struck{font-family:var(--serif);font-size:clamp(28px,3vw,46px);color:#b9b8cc;text-decoration:line-through;text-decoration-thickness:3px;text-decoration-color:var(--violet);line-height:1.5}
   .kept{color:var(--ink);font-family:var(--serif);font-weight:700;max-width:none;font-size:clamp(40px,5vw,78px);line-height:1.2;margin-top:3vh}
@@ -106,6 +108,27 @@
   .steps h3{font-family:var(--serif);font-size:clamp(22px,1.9vw,30px)}
   .steps p{font-size:clamp(16px,1.3vw,20px)}
 
+  .facts{display:grid;grid-template-columns:repeat(4,1fr);gap:2vw;margin-top:6vh;border-top:1.5px solid var(--ink);padding-top:3vh}
+  .facts dt{font-family:var(--serif);font-weight:700;font-size:clamp(32px,3.4vw,52px);color:var(--violet);line-height:1.1}
+  .facts dd{font-size:clamp(14px,1.15vw,17px);color:var(--soft);margin-top:6px}
+  .steps.compact li{padding:16px 0;grid-template-columns:70px 1fr 2fr}
+  .steps.compact li::before{font-size:clamp(30px,2.8vw,44px)}
+  .steps.compact h3{font-size:clamp(19px,1.6vw,25px)}
+  .route.r5{grid-template-columns:repeat(5,1fr)}
+  .route.r5::before{right:14%}
+  .compare{width:100%;border-collapse:collapse;font-size:clamp(15px,1.25vw,19px)}
+  .compare th,.compare td{text-align:left;padding:16px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  .compare thead th{font-family:var(--serif);font-size:clamp(17px,1.4vw,22px);border-bottom:1.5px solid var(--ink);color:var(--soft);font-weight:700}
+  .compare tbody th{font-weight:600;color:var(--ink);width:22%}
+  .compare td{color:var(--soft)}
+  .compare .us{color:var(--ink);font-weight:600;background:#f4f0fd}
+  .compare thead .us{color:var(--violet)}
+  .frame.frame3d{background:var(--ink)}
+  #terrainBig{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab}
+  .d3name{position:absolute;left:18px;top:14px;color:#fff;font-family:var(--serif);font-size:22px}
+  .d3ctrl{position:absolute;left:10px;bottom:4px}
+  .d3chips{margin-bottom:2vh}
+  .d3chips span.on{border-color:var(--violet);color:var(--violet)}
   /* ── 시연 화면 ── */
   #demo-map,#demo-cam{padding-top:5vh;padding-bottom:5vh}
   .demo-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:3vh}
@@ -185,15 +208,15 @@
   .ctrl{display:flex;gap:8px;padding:12px 18px 16px}
 
   /* ── 시연용 QR ── */
-  section[data-title="시연용 QR"]{padding-top:4vh;padding-bottom:4vh}
-  section[data-title="시연용 QR"] h2{margin-bottom:3vh}
+  section[data-title="부록: 시연용 QR"]{padding-top:4vh;padding-bottom:4vh}
+  section[data-title="부록: 시연용 QR"] h2{margin-bottom:3vh}
   .qrgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:2vh 1.6vw}
   .qrcard{border-top:1.5px solid var(--ink);padding-top:8px}
   .qrcard .qr{width:min(8vw,10vh,130px);aspect-ratio:1;margin-bottom:6px}
   .qrcard .qr img,.qrcard .qr canvas{width:100%!important;height:100%!important}
   .qrcard b{display:block;font-family:var(--serif);font-size:14px;line-height:1.35}
   .qrcard small{font-size:12px;color:var(--soft)}
-  @media print{body{overflow:visible}section{display:none}section[data-title="시연용 QR"]{display:flex;height:auto}#rail{display:none}}
+  @media print{body{overflow:visible}section{display:none}section[data-title="부록: 시연용 QR"]{display:flex;height:auto}#rail{display:none}}
 
   #end h1{font-size:clamp(72px,9vw,150px);line-height:1}
   #end p{margin-top:4vh}
@@ -314,7 +337,7 @@
 </script>
 <nav id="rail" aria-label="발표 순서"></nav>
 
-<section id="cover" class="dark" data-title="표지">
+<section id="cover" class="dark" data-title="1. 표지">
   <div class="inner rv">
     <h1>어디가노</h1>
     <p class="lead">QR 하나를 찍으면, 이야기가 다음 장소로 이어집니다.</p>
@@ -330,7 +353,7 @@
   </svg>
 </section>
 
-<section data-title="문제 제기">
+<section data-title="2. 문제 제기 ①">
   <div class="inner rv">
     <div class="problem">
       <div>
@@ -343,37 +366,77 @@
         <div><dt>찾기 어렵다</dt><dd>노인, 어린이, 외국인은 정보를 얻기가 더 어렵습니다.</dd></div>
       </dl>
     </div>
+    <p class="src">출처: 팀 세명, 고! 「어디가노」 제작 계획서(2026) 제작배경</p>
   </div>
 </section>
 
-<section data-title="목표">
+<section data-title="2. 문제 제기 ②">
   <div class="inner rv">
-    <h2>숨은 명소를 알리고, 지역에 사람이 오게 합니다.</h2>
-    <dl class="terms">
-      <div><dt>알리기</dt><dd>지역의 문화유산과 관광지를 소개하고 널리 알립니다.</dd></div>
-      <div><dt>누구나 쓰기</dt><dd>나이와 언어에 상관없이, 앱 설치 없이 쓸 수 있게 만듭니다.</dd></div>
-      <div><dt>지역 살리기</dt><dd>사람이 찾아오면 지역 경제가 돌고, 지역 소멸을 늦출 수 있습니다.</dd></div>
+    <h2>대표 명소조차 ‘한 곳 보고 끝’입니다.</h2>
+    <dl class="facts f3" style="margin-top:0">
+      <div><dt>8억 원</dt><dd>2021년 의림지 인공폭포와 제림에 설치한 미디어파사드 사업비</dd></div>
+      <div><dt>10분 × 3회</dt><dd>설화 2편과 사계절 4편을 저녁에 세 번 상영</dd></div>
+      <div><dt>집계 없음</dt><dd>관람객이 얼마나 오는지 파악하지 못함</dd></div>
+    </dl>
+    <dl class="terms" style="margin-top:4vh">
+      <div><dt>볼거리가 한 곳에</dt><dd>사람들은 파사드 앞에만 모이고, 상영이 끝나면 발길도 끝납니다.</dd></div>
+      <div><dt>걷는 길엔 이야기가 없다</dt><dd>산책로는 조명만 켜진 길이라 지나가기만 하고, 제방 주변은 어두워 안전 우려도 나옵니다.</dd></div>
+    </dl>
+    <p class="src">출처: 뉴시스(2021.11.17) 「밤이 더 아름다운 제천 의림지…미디어파사드 가동」 · SBS(2021.11) 「자연 스크린 삼아 ‘미디어 파사드’…의림지의 아름다운 야경」 · 충청투데이(2023.5.23) 「밤에도 아름다운 제천 의림지… 발길 사로잡은 미디어파사드」 · 세명대 아트앤산업디자인학과 「의림지, 밤을 다시 설계하다」(2026.10)</p>
+  </div>
+</section>
+
+<section data-title="2. 문제 제기 ③">
+  <div class="inner rv">
+    <h2>사람이 머물지 않으면, 지역도 비어 갑니다.</h2>
+    <div class="problem">
+      <dl class="terms">
+        <div><dt>인구감소지역</dt><dd>제천시는 2021년 행정안전부가 처음 지정한 인구감소지역 89곳 가운데 하나입니다.</dd></div>
+        <div><dt>매달 100여 명</dt><dd>1970년대 약 17만 명이던 인구가 지금도 매달 100여 명씩 줄고 있습니다.</dd></div>
+        <div><dt>흩어진 관광지</dt><dd>제천시도 시티투어 등으로 흩어진 관광지를 이어 체류형 관광을 늘리려 하고 있습니다.</dd></div>
+      </dl>
+      <p class="lead">그래서 생각했습니다.<br><b>숨은 명소를 이야기로 이어서, 한 곳만 보고 떠나던 사람이 더 오래 걷고 머물게 하자.</b></p>
+    </div>
+    <p class="src">출처: 파이낸셜뉴스(2021.10.18) 「행안부, 인구감소 89곳 지정」 · 머니투데이(2025.7.2) 「지방소멸 문턱에서…고려인 품은 제천의 반전 스토리」 · 아시아뉴스통신 「제천시, 관광마케팅 사업으로 체류형 관광객 발길 잡는다」</p>
+  </div>
+</section>
+
+<section data-title="3. 산출물 개요">
+  <div class="inner rv">
+    <h2>어디가노는 제천 10경을 이야기로 잇는 안내 서비스입니다.</h2>
+    <div class="two">
+      <div>
+        <p class="lead" style="color:var(--violet)">지도</p>
+        <p>제천 10경과 그 안에 숨은 명소를 지도에서 고르고, 출발 지점까지 길을 안내받습니다.</p>
+      </div>
+      <div>
+        <p class="lead" style="color:var(--blue)">카메라</p>
+        <p>현장의 QR을 비추면 AR 도슨트가 이야기를 들려주고, 드론으로 내려다본 듯한 3D 화면이 함께 나옵니다.</p>
+      </div>
+    </div>
+    <dl class="facts">
+      <div><dt>10곳</dt><dd>제천 10경</dd></div>
+      <div><dt>5곳</dt><dd>10경 곁의 숨은 명소</dd></div>
+      <div><dt>18개</dt><dd>이야기가 이어지는 QR</dd></div>
+      <div><dt>0개</dt><dd>설치해야 하는 앱</dd></div>
     </dl>
   </div>
 </section>
 
-<section data-title="서비스 개요">
+<section data-title="4. 개발 과정">
   <div class="inner rv">
-    <h2>지도로 찾아가고, 카메라로 듣습니다.</h2>
-    <div class="two">
-      <div>
-        <p class="lead" style="color:var(--violet)">지도</p>
-        <p>제천 10경과 그 안에 숨은 명소를 지도에서 찾고, 가장 가까운 길로 안내받습니다. 특정 지역에 들어서면 GPS가 근처 명소를 먼저 알려 줍니다.</p>
-      </div>
-      <div>
-        <p class="lead" style="color:var(--blue)">카메라</p>
-        <p>현장의 QR을 비추면 AR 도슨트가 나타나 그곳의 이야기를 들려줍니다. 아래에는 드론으로 찍은 듯한 3D 항공 화면이 함께 나옵니다.</p>
-      </div>
-    </div>
+    <h2>아이디어는 이렇게 다듬어졌습니다.</h2>
+    <ol class="steps compact">
+      <li><h3>처음 생각</h3><p>홍보가 없어 아무도 모르는 명소를 GPS로 추천하고, QR로 해설을 보여주자.</p></li>
+      <li><h3>부딪힌 문제</h3><p>한 곳을 보고 나면 거기서 끝난다. 다른 명소로 이어지지 않는다.</p></li>
+      <li><h3>검토한 방법</h3><p>스탬프, 칭호, 도감 같은 보상은 다 모으면 끝나고, 스스로 움직이게 하지는 못한다.</p></li>
+      <li><h3>찾은 답</h3><p>이야기를 한 장소에서 끝내지 않는다. QR이 다음 장소의 QR을 부른다.</p></li>
+      <li><h3>범위 정하기</h3><p>누구나 아는 제천 10경을 뼈대로 삼고, 그 곁의 숨은 명소를 이야기로 묶는다.</p></li>
+    </ol>
   </div>
 </section>
 
-<section data-title="핵심 아이디어">
+<section data-title="4. 핵심 아이디어">
   <div class="inner rv">
     <p class="struck">스탬프 모으기, 칭호 받기, 도감 채우기</p>
     <p class="kept">뒷이야기가 궁금해서 다음 장소로 갑니다.
@@ -381,34 +444,56 @@
   </div>
 </section>
 
-<section data-title="이어지는 이야기">
+<section data-title="4. 기능 도출">
   <div class="inner rv">
-    <h2>QR이 다음 QR을 부릅니다.</h2>
-    <div class="route">
-      <div class="stop"><span class="dot">1</span><h3>박달재</h3><p>도슨트가 박달 도령과 금봉 낭자의 이야기를 들려줍니다.</p><q>고개 바로 아래, 커다란 느티나무를</q></div>
-      <div class="stop"><span class="dot">2</span><h3>오백나한상과 목굴암</h3><p>느티나무 속에 깎아 놓은 오백 명의 수행자를 만납니다.</p><q>배 밑바닥처럼 생긴 골짜기로</q></div>
-      <div class="stop"><span class="dot">3</span><h3>배론성지</h3><p>숨어서 믿음을 지킨 사람들의 마을에서 코스가 끝납니다.</p></div>
-      <div class="stop end"><span class="dot">✓</span><h3>다음 이야기로</h3><p>제천 10경마다 숨은 명소로 이어지는 이야기가 기다립니다.</p></div>
+    <h2>그래서 두 가지 기능을 만들었습니다.</h2>
+    <div class="two">
+      <dl class="terms">
+        <div><dt style="color:var(--violet)">지도</dt><dd>제천 10경과 숨은 명소를 나눠 보기</dd></div>
+        <div><dt>처음 누르면</dt><dd>그 장소의 산책 코스를 설명</dd></div>
+        <div><dt>다시 누르면</dt><dd>코스의 출발 지점과 가는 길을 안내</dd></div>
+      </dl>
+      <dl class="terms">
+        <div><dt style="color:var(--blue)">카메라</dt><dd>QR을 비추면 그 장소를 알아봄</dd></div>
+        <div><dt>AR 도슨트</dt><dd>화면 위에 나타나 자막과 음성으로 이야기</dd></div>
+        <div><dt>3D 항공샷</dt><dd>높이가 있는 지형으로 장소를 내려다봄</dd></div>
+      </dl>
     </div>
-    <p style="margin-top:5vh;font-size:15px">제천 10경과 그 안에 숨은 명소들을 이야기로 엮었습니다. 장소는 계속 늘려 갈 수 있습니다.</p>
+    <p style="margin-top:4vh;font-size:15px">모두 웹 기술(GPS, 지도, QR 인식, WebAR, 3D 그래픽)로 만들어 앱 설치가 필요 없습니다. 짧게 만들고 써 보며 고치는 애자일 방식으로 개발합니다.</p>
   </div>
 </section>
 
-<section data-title="이용 흐름">
+<section data-title="5. 사용 흐름">
   <div class="inner rv">
     <h2>사용자는 이렇게 움직입니다.</h2>
-    <ol class="steps">
-      <li><h3>지역에 들어서기</h3><p>정해 둔 경계 안에 들어오면 GPS가 근처의 제천 10경과 숨은 명소를 추천합니다.</p></li>
-      <li><h3>지도 따라 걷기</h3><p>고른 장소까지 가장 가까운 길을 안내합니다.</p></li>
-      <li><h3>QR 비추기</h3><p>도슨트가 이야기를 들려주고, 뒷이야기는 다음 장소의 QR에 남겨 둡니다.</p></li>
+    <ol class="steps compact">
+      <li><h3>지역에 들어서기</h3><p>제천에 들어오면 GPS가 근처의 제천 10경과 숨은 명소를 알려 줍니다.</p></li>
+      <li><h3>지도에서 고르기</h3><p>처음 누르면 코스 설명, 한 번 더 누르면 출발 지점이 나옵니다.</p></li>
+      <li><h3>길 따라 걷기</h3><p>출발 지점까지 가장 가까운 길을 안내합니다.</p></li>
+      <li><h3>QR 비추기</h3><p>AR 도슨트가 나타나 이야기를 들려주고, 3D 항공샷이 함께 나옵니다.</p></li>
+      <li><h3>다음 장소로</h3><p>이야기의 뒷부분은 다음 장소의 QR에 있습니다. 끝까지 들으면 코스가 완성됩니다.</p></li>
     </ol>
   </div>
 </section>
 
-<section id="demo-map" data-title="시연: 지도">
+<section data-title="5. 예시: 의림지">
+  <div class="inner rv">
+    <h2>예를 들어, 의림지에서 시작하면</h2>
+    <div class="route r5">
+      <div class="stop"><span class="dot">1</span><h3>용추폭포 유리전망대</h3><p>발아래 폭포를 보며 이야기가 시작됩니다.</p><q>다리를 건너 경호루로</q></div>
+      <div class="stop"><span class="dot">2</span><h3>경호루</h3><p>호수를 바라보는 1948년의 누각.</p><q>소나무 숲길, 제림을 따라</q></div>
+      <div class="stop"><span class="dot">3</span><h3>제림 송림길</h3><p>삼한시대에 쌓았다는 둑 위의 숲.</p><q>둑 끝의 영호정으로</q></div>
+      <div class="stop"><span class="dot">4</span><h3>영호정</h3><p>호수에 그림자를 비추는 1807년의 정자.</p><q>시내 동쪽의 오래된 탑으로</q></div>
+      <div class="stop end"><span class="dot">5</span><h3>장락동 칠층모전석탑</h3><p>숨은 명소에서 이야기가 끝납니다.</p></div>
+    </div>
+    <p style="margin-top:5vh;font-size:15px">걷는 거리는 약 250m, 마지막 탑까지는 차로 6분 정도입니다.</p>
+  </div>
+</section>
+
+<section id="demo-map" data-title="6. 시연: 지도">
   <div class="inner rv">
     <div class="demo-head">
-      <h2>시연 1. 지도에서 찾아가기</h2>
+      <h2>기능 시연 1. 지도에서 찾아가기</h2>
       <p>처음 누르면 코스 설명, 다시 누르면 출발 지점이 나와요.</p>
     </div>
     <div class="frame interactive">
@@ -428,10 +513,10 @@
   </div>
 </section>
 
-<section id="demo-cam" data-title="시연: 카메라">
+<section id="demo-cam" data-title="6. 시연: QR과 도슨트">
   <div class="inner rv">
     <div class="demo-head">
-      <h2>시연 2. QR 비추고 이야기 듣기</h2>
+      <h2>기능 시연 2. QR 비추고 이야기 듣기</h2>
       <div style="display:flex;gap:10px">
         <button class="btn" id="camBtn">카메라 켜기</button>
         <button class="btn ghost" id="simBtn">QR 없이 보기</button>
@@ -463,40 +548,39 @@
   </div>
 </section>
 
-<section data-title="차별점">
+<section id="demo-3d" data-title="6. 시연: 3D 항공샷">
   <div class="inner rv">
-    <h2>앱 설치 없이, QR 한 번이면 됩니다.</h2>
-    <div class="two">
-      <dl class="terms">
-        <div><dt>앱이 필요 없음</dt><dd>QR을 한 번 비추면 웹 브라우저에서 바로 열립니다.</dd></div>
-        <div><dt>누구나 쉽게</dt><dd>어르신, 어린이, 외국인도 화면 하나로 따라갈 수 있습니다.</dd></div>
-      </dl>
-      <dl class="terms">
-        <div><dt>궁금증이 이끔</dt><dd>보상 없이도 뒷이야기를 들으려고 스스로 다음 장소로 갑니다.</dd></div>
-        <div><dt>현장에서 듣는 이야기</dt><dd>AR 도슨트와 항공 화면으로 그 자리의 이야기를 생생하게 전합니다.</dd></div>
-      </dl>
+    <div class="demo-head">
+      <h2>기능 시연 3. 드론 3D 항공샷</h2>
+      <p>장소를 고르고, 화면을 끌어서 돌려 보세요.</p>
+    </div>
+    <div class="chips d3chips interactive" id="d3chips"></div>
+    <div class="frame frame3d interactive">
+      <canvas id="terrainBig" aria-label="드론으로 내려다본 3D 지형"></canvas>
+      <div class="alt" id="altBig"></div>
+      <div class="d3name" id="d3name"></div>
+      <div class="ctrl d3ctrl"><button class="mini dark" id="rotBig">회전 멈춤</button><button class="mini dark" id="zoomBig">확대</button></div>
     </div>
   </div>
 </section>
 
-<section data-title="기술과 개발">
+<section data-title="7. 차별점">
   <div class="inner rv">
-    <h2>이렇게 만듭니다.</h2>
-    <div class="two">
-      <dl class="terms">
-        <div><dt>지도</dt><dd>GPS 위치 인식, 지도와 길 안내 API</dd></div>
-        <div><dt>카메라</dt><dd>QR 인식, WebAR, AI 도슨트</dd></div>
-        <div><dt>3D와 장치</dt><dd>드론 항공 3D 시뮬레이션, 아두이노</dd></div>
-      </dl>
-      <dl class="terms">
-        <div><dt>애자일</dt><dd>짧게 만들고 써 본 사람의 의견을 바로 반영합니다.</dd></div>
-        <div><dt>폭포수 모델 참고</dt><dd>분석, 설계, 구현, 테스트 순서로 큰 일정을 잡습니다.</dd></div>
-      </dl>
-    </div>
+    <h2>다른 관광 서비스와 무엇이 다른가요?</h2>
+    <table class="compare">
+      <thead><tr><th></th><th>일반 관광 안내 앱</th><th>스탬프 투어</th><th class="us">어디가노</th></tr></thead>
+      <tbody>
+        <tr><th>시작하려면</th><td>앱 설치, 회원가입</td><td>종이 지도나 앱</td><td class="us">QR 한 번</td></tr>
+        <tr><th>다음 장소로 가는 이유</th><td>스스로 찾아야 함</td><td>도장, 경품</td><td class="us">이야기의 뒷부분이 궁금해서</td></tr>
+        <tr><th>안내하는 곳</th><td>유명 관광지 중심</td><td>정해 둔 몇 곳</td><td class="us">제천 10경과 그 곁의 숨은 명소</td></tr>
+        <tr><th>현장 해설</th><td>글과 사진</td><td>거의 없음</td><td class="us">AR 도슨트, 3D 항공샷</td></tr>
+        <tr><th>다 끝나면</th><td>앱을 닫음</td><td>경품을 받으면 끝</td><td class="us">다른 10경의 이야기로 이어짐</td></tr>
+      </tbody>
+    </table>
   </div>
 </section>
 
-<section data-title="기대 효과">
+<section data-title="8. 기대 효과">
   <div class="inner rv">
     <h2>한 곳만 보고 떠나던 사람이, 코스 전체를 걷습니다.</h2>
     <dl class="terms">
@@ -507,19 +591,19 @@
   </div>
 </section>
 
-<section data-title="시연용 QR">
-  <div class="inner rv">
-    <h2>시연용 QR</h2>
-    <div class="qrgrid interactive" id="qrGrid"></div>
-    <p style="margin-top:4vh;font-size:15px">출력해서 하드보드지에 붙이세요. 휴대폰 기본 카메라로 찍어도 이 사이트의 해당 장소 이야기가 열립니다.</p>
-  </div>
-</section>
-
-<section id="end" class="dark" data-title="마무리">
+<section id="end" class="dark" data-title="9. 마무리">
   <div class="inner rv">
     <h1>감사합니다.</h1>
     <p class="lead" style="color:#fff">궁금한 점을 물어봐 주세요.</p>
     <p>어디가노, 팀 세명, 고!</p>
+  </div>
+</section>
+
+<section data-title="부록: 시연용 QR">
+  <div class="inner rv">
+    <h2>부록. 시연용 QR</h2>
+    <div class="qrgrid interactive" id="qrGrid"></div>
+    <p style="margin-top:4vh;font-size:15px">출력해서 하드보드지에 붙이세요. 휴대폰 기본 카메라로 찍어도 이 사이트의 해당 장소 이야기가 열립니다.</p>
   </div>
 </section>
 
@@ -723,8 +807,8 @@
   const TERRAIN={ uirimji:['lake','pavilion'], jangnak:['plain','tower'], bakdal:['pass','pavilion'],
     worak:['mountain','pavilion'], cheongpung:['lakehill','pavilion'], geumsu:['mountainlake','pavilion'],
     yongha:['valley',null], songgye:['valley','gate'], oksun:['peaks',null], taksa:['valley','pavilion'], baeron:['valley','pavilion'] };
-  const T3D=(function(){
-    const cv=document.getElementById('terrain'),ctx=cv.getContext('2d');
+  function makeT3D(cv,altEl){
+    const ctx=cv.getContext('2d');
     const N=36; let H=[],W=[],water=-9,lm=null,yaw=0.7,tilt=1.0,zoom=1,spin=true,raf=0,last=0,drag=null,bob=0;
     const L=(()=>{const v=[-0.5,-0.4,0.75],m=Math.hypot(...v);return v.map(x=>x/m);})();
     function rnd(seed){let s=seed%2147483647||1;return()=>((s=s*16807%2147483647)/2147483647);}
@@ -822,13 +906,25 @@
     addEventListener('resize',size);
     function show(s){
       const [k,b]=TERRAIN[s.area]||['plain','pavilion'];build(k,s.id*131+7);landmark(b,k);
-      const peak=Math.max(...H.flat());document.getElementById('altText').innerHTML='고도 '+Math.round(120+peak*500)+'m<br>끌어서 돌려 보기';
+      const peak=Math.max(...H.flat());altEl.innerHTML='고도 '+Math.round(120+peak*500)+'m<br>끌어서 돌려 보기';
     }
     show(STOPS[0]);
     return { show, start(){size();if(!raf)raf=requestAnimationFrame(loop);}, stop(){cancelAnimationFrame(raf);raf=0;},
       toggleSpin(){spin=!spin;return spin;}, toggleZoom(){zoom=zoom>1?1:1.45;return zoom>1;} };
-  })();
+  }
+  const T3D=makeT3D(document.getElementById('terrain'),document.getElementById('altText'));
+  const T3DBig=makeT3D(document.getElementById('terrainBig'),document.getElementById('altBig'));
 
+
+  (function(){ // 3D 시연 장: 장소 고르기
+    const box=document.getElementById('d3chips');
+    Object.keys(AREAS).forEach((k,n)=>{const c=document.createElement('span');c.textContent=areaLabel(k);
+      c.onclick=()=>{[...box.children].forEach(x=>x.classList.remove('on'));c.classList.add('on');
+        const s=stopsOf(k)[0];T3DBig.show(s);document.getElementById('d3name').textContent=AREAS[k].name;};
+      box.appendChild(c);if(n===0)c.click();});
+    document.getElementById('rotBig').onclick=e=>{const on=T3DBig.toggleSpin();e.target.textContent=on?'회전 멈춤':'회전';};
+    document.getElementById('zoomBig').onclick=e=>{const z=T3DBig.toggleZoom();e.target.textContent=z?'축소':'확대';};
+  })();
   document.getElementById('camBtn').onclick=startCam;
   document.getElementById('simBtn').onclick=()=>{
     // 지도에서 고른 장소가 있으면 그곳, 아니면 코스의 다음 장소, 그것도 없으면 아직 안 들은 첫 장소
@@ -889,6 +985,7 @@
   function onEnter(sec){
     if(sec.id==='demo-map'){initMap();setTimeout(()=>map&&map.invalidateSize(),DURATION+20);}
     if(sec.id==='demo-cam')setTimeout(()=>T3D.start(),60);else T3D.stop();
+    if(sec.id==='demo-3d')setTimeout(()=>T3DBig.start(),60);else T3DBig.stop();
     if(sec.id!=='demo-cam'&&stream)stopCam();       // 카메라 장을 벗어나면 카메라 끄기
   }
   function update(){
