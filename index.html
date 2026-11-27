@@ -187,6 +187,13 @@
   .scanbox.on{display:block}
   .scanbox::after{content:"";position:absolute;left:8px;right:8px;height:2px;background:#fff;top:10%;animation:scan 1.8s ease-in-out infinite}
   @keyframes scan{50%{top:86%}}
+  .qrwarn{position:absolute;left:50%;top:50%;transform:translate(-50%,-46%);width:min(420px,86%);z-index:5;background:#fff;color:var(--ink);
+          border-radius:6px;border-top:4px solid #e0a43c;padding:18px 20px;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
+  .qrwarn.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%)}
+  .qrwarn small{font-size:13px;color:var(--soft)}
+  .qrwarn h4{font-family:var(--serif);font-size:21px;margin:2px 0 6px}
+  .qrwarn p{font-size:15px;line-height:1.6;color:var(--ink)}
+  .qrwarn .mini{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
   .docent-layer{position:absolute;inset:0;display:none}
   .docent-layer.on{display:block}
   .docent{position:absolute;left:5%;bottom:0;width:19%;animation:pop .8s ease-out both}
@@ -520,6 +527,7 @@
       <div style="display:flex;gap:10px">
         <button class="btn" id="camBtn">카메라 켜기</button>
         <button class="btn ghost" id="simBtn">QR 없이 보기</button>
+        <button class="btn ghost" id="wrongBtn">틀린 QR 비추기</button>
       </div>
     </div>
     <div class="frame interactive">
@@ -530,6 +538,7 @@
           <div class="cam-idle" id="camIdle">카메라를 켜고<br>현장의 QR코드를 비춰 주세요</div>
           <span class="ar-label" id="camLabel">카메라 꺼짐</span>
           <div class="scanbox" id="scanbox"></div>
+          <div class="qrwarn" id="qrWarn" role="alert"></div>
           <div class="docent-layer" id="docentLayer">
             <svg class="docent" viewBox="0 0 100 200" aria-hidden="true"><ellipse cx="50" cy="196" rx="34" ry="5" fill="rgba(0,0,0,.3)"/><path d="M22 195 L30 90 Q50 80 70 90 L78 195z" fill="#e9e4f7"/><path d="M50 84 L50 195" stroke="#6a3fd6" stroke-width="3"/><circle cx="50" cy="66" r="18" fill="#f3d9c0"/><rect x="28" y="40" width="44" height="6" rx="3" fill="#23204a"/><rect x="38" y="22" width="24" height="20" rx="4" fill="#23204a"/><path d="M70 100 Q88 110 92 90" stroke="#e9e4f7" stroke-width="10" fill="none" stroke-linecap="round"/></svg>
             <div class="bubble"><small id="dName">도슨트</small><span id="dText"></span>
@@ -782,11 +791,42 @@
       const w=480,h=Math.round(w*video.videoHeight/video.videoWidth)||360;
       cvs.width=w;cvs.height=h;ctx.drawImage(video,0,0,w,h);
       const code=jsQR(ctx.getImageData(0,0,w,h).data,w,h,{inversionAttempts:'dontInvert'});
-      if(code){const s=parseQR(code.data);if(s&&(!lastStop||s.id!==lastStop.id))showDocent(s);}
+      if(code){const s=parseQR(code.data);if(!s)warnUnknown(code.data);else if(!lastStop||s.id!==lastStop.id)handleScan(s);}
     }
     setTimeout(()=>requestAnimationFrame(scan),120);
   }
+  /* ── QR 순서 확인: 이야기 차례가 아닌 장소의 QR이면 다음 장소로 안내 ── */
+  let warnKey='',warnAt=0;
+  const isStart=s=>!STOPS.some(x=>x.next===s.id);
+  function handleScan(s){
+    const expected=lastStop&&lastStop.next?STOPS.find(x=>x.id===lastStop.next):null;
+    if(expected&&s.id!==expected.id&&!heard.has(s.id)) return warnOrder(s,expected);
+    if(!expected){const ch=chainOf(s),first=ch.find(x=>!heard.has(x.id));
+      if(first&&ch.indexOf(first)<ch.indexOf(s)) return warnOrder(s,first);}
+    showDocent(s);
+  }
+  function showWarn(key,html){
+    const now=performance.now();if(key===warnKey&&now-warnAt<4000)return;warnKey=key;warnAt=now;
+    const w=document.getElementById('qrWarn');w.innerHTML=html;w.classList.add('on');
+    const g=w.querySelector('[data-go]');if(g)g.onclick=()=>{const tgt=STOPS.find(x=>x.id===+g.dataset.go);w.classList.remove('on');
+      if(lastStop){me={lat:lastStop.lat,lng:lastStop.lng};if(meMarker)meMarker.setLatLng([me.lat,me.lng]);}
+      goTo(secs.indexOf(document.getElementById('demo-map')));setTimeout(()=>selectStop(tgt),DURATION+50);};
+    const n=w.querySelector('[data-new]');if(n)n.onclick=()=>{w.classList.remove('on');lastStop=null;showDocent(STOPS.find(x=>x.id===+n.dataset.new));};
+    const c=w.querySelector('[data-close]');if(c)c.onclick=()=>w.classList.remove('on');
+  }
+  function warnOrder(s,target){
+    showWarn('order'+s.id,'<small>'+s.name+'의 QR이에요</small><h4>아직 이 장소 차례가 아니에요</h4>'
+      +'<p>이야기는 <b>'+target.name+'</b>에서 이어져요. 먼저 그곳으로 가서 QR을 비춰 주세요.</p>'
+      +'<div class="dbtns"><button class="nextchip" data-go="'+target.id+'">'+target.name+' 길 안내</button>'
+      +(isStart(s)?'<button class="mini" data-new="'+s.id+'">여기서 새 이야기 시작</button>':'')
+      +'<button class="mini" data-close>닫기</button></div>');
+  }
+  function warnUnknown(raw){
+    showWarn('unk'+raw,'<small>알 수 없는 QR</small><h4>어디가노 QR이 아니에요</h4>'
+      +'<p>장소 안내판에 붙은 어디가노 QR을 비춰 주세요.</p><div class="dbtns"><button class="mini" data-close>닫기</button></div>');
+  }
   function showDocent(s){
+    document.getElementById('qrWarn').classList.remove('on');
     lastStop=s;heard.add(s.id);renderList(document.querySelector('#chips .on').dataset.f);
     progEl.innerHTML='';chainOf(s).forEach(x=>{const b=document.createElement('i');if(heard.has(x.id))b.className='on';progEl.appendChild(b);});
     const layer=document.getElementById('docentLayer');layer.classList.remove('on');void layer.offsetWidth;layer.classList.add('on');
@@ -977,6 +1017,17 @@
     document.getElementById('rotBig').onclick=e=>{const on=T3DBig.toggleSpin();e.target.textContent=on?'회전 멈춤':'회전';};
     document.getElementById('zoomBig').onclick=e=>{const z=T3DBig.toggleZoom();e.target.textContent=z?'축소':'확대';};
   })();
+  function hideDocent(){ // 화면에서만 지움. 어디까지 들었는지(lastStop)는 남겨서 이야기가 이어지게 함
+    document.getElementById('qrWarn').classList.remove('on');
+    document.getElementById('docentLayer').classList.remove('on');
+    document.getElementById('camIdle').classList.remove('hide');
+    clearInterval(typing);document.getElementById('dText').textContent='';
+    if('speechSynthesis' in window)speechSynthesis.cancel();
+  }
+  document.getElementById('wrongBtn').onclick=()=>{ // 시연용: 차례가 아닌 장소의 QR을 비춘 상황
+    const expected=lastStop&&lastStop.next?STOPS.find(x=>x.id===lastStop.next):STOPS[0];
+    const wrong=STOPS.find(x=>x.id===(expected.next||expected.id+1))||STOPS.find(x=>x.id!==expected.id&&!isStart(x));
+    handleScan(wrong);};
   document.getElementById('camBtn').onclick=startCam;
   document.getElementById('simBtn').onclick=()=>{
     // 지도에서 고른 장소가 있으면 그곳, 아니면 코스의 다음 장소, 그것도 없으면 아직 안 들은 첫 장소
@@ -1038,7 +1089,7 @@
     if(sec.id==='demo-map'){initMap();setTimeout(()=>map&&map.invalidateSize(),DURATION+20);}
     if(sec.id==='demo-cam')setTimeout(()=>T3D.start(),60);else T3D.stop();
     if(sec.id==='demo-3d')setTimeout(()=>T3DBig.start(),60);else T3DBig.stop();
-    if(sec.id!=='demo-cam'&&stream)stopCam();       // 카메라 장을 벗어나면 카메라 끄기
+    if(sec.id!=='demo-cam'){if(stream)stopCam();hideDocent();}   // 카메라 장을 벗어나면 도슨트도 사라짐       // 카메라 장을 벗어나면 카메라 끄기
   }
   function update(){
     [...rail.children].forEach((d,i)=>{d.classList.toggle('on',i===cur);d.classList.toggle('past',i<cur);});
