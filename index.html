@@ -212,6 +212,9 @@
   .qrwarn h4{font-family:var(--serif);font-size:21px;margin:2px 0 6px}
   .qrwarn p{font-size:15px;line-height:1.6;color:var(--ink)}
   .qrwarn .mini{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+  .qrwarn .two-opt{flex-direction:column;align-items:stretch}
+  .qrwarn .two-opt button{text-align:center;padding:11px 14px}
+  .qrwarn .mini.opt2{border-color:var(--violet);color:var(--violet)}
   .docent-layer{position:absolute;inset:0;display:none}
   .docent-layer.on{display:block}
   /* ── AR: 바닥(QR 표지)에 서 있는 도슨트 ── */
@@ -889,20 +892,25 @@
   function showWarn(key,html){
     const now=performance.now();if(key===warnKey&&now-warnAt<4000)return;warnKey=key;warnAt=now;
     const w=document.getElementById('qrWarn');w.innerHTML=html;w.classList.add('on');
-    const g=w.querySelector('[data-go]');if(g)g.onclick=()=>{const tgt=STOPS.find(x=>x.id===+g.dataset.go);w.classList.remove('on');
+    w.querySelectorAll('[data-go]').forEach(g=>g.onclick=()=>{const tgt=STOPS.find(x=>x.id===+g.dataset.go);w.classList.remove('on');
+      if(g.dataset.reset){lastStop=null;pendingQR=null;}
       if(lastStop){me={lat:lastStop.lat,lng:lastStop.lng};if(meMarker)meMarker.setLatLng([me.lat,me.lng]);}
-      goTo(secs.indexOf(document.getElementById('demo-map')));setTimeout(()=>selectStop(tgt),DURATION+50);};
+      goTo(secs.indexOf(document.getElementById('demo-map')));setTimeout(()=>selectStop(tgt),DURATION+50);});
     const n=w.querySelector('[data-new]');if(n)n.onclick=()=>{w.classList.remove('on');lastStop=null;pendingQR=null;showDocent(STOPS.find(x=>x.id===+n.dataset.new));};
     const c=w.querySelector('[data-close]');if(c)c.onclick=()=>w.classList.remove('on');
   }
   function warnOrder(s,target,why){
-    const msg=why==='nav'?'길 안내로 도착한 곳은 <b>'+target.name+'</b>이에요. '+target.name+'의 QR을 비춰 주세요.'
-            :why==='story'?'이야기는 <b>'+target.name+'</b>에서 이어져요. 먼저 그곳으로 가서 QR을 비춰 주세요.'
-            :'이 코스는 <b>'+target.name+'</b>부터 시작해요. 먼저 그곳의 QR을 비춰 주세요.';
-    showWarn('order'+s.id+'-'+target.id,'<small>'+s.name+'의 QR이에요</small><h4>다음 장소가 아니에요</h4><p>'+msg+'</p>'
-      +'<div class="dbtns"><button class="nextchip" data-go="'+target.id+'">'+target.name+' 길 안내</button>'
-      +(areaStart(s)&&why!=='order'?'<button class="mini" data-new="'+s.id+'">여기서 새 이야기 시작</button>':'')
-      +'<button class="mini" data-close>닫기</button></div>');
+    const msg=why==='nav'?'길 안내로 도착한 곳은 <b>'+target.name+'</b>이에요.'
+            :why==='story'?'이야기는 <b>'+target.name+'</b>에서 이어져요.'
+            :'이 코스는 <b>'+target.name+'</b>부터 시작해요.';
+    // 인식된 장소 쪽으로 바꿀 때: 바로 들을 수 있으면 그 자리에서 시작, 아니면 그 코스의 첫 장소로 안내
+    const area=stopsOf(s.area),idx=area.indexOf(s),before=area.slice(0,idx).find(x=>!heard.has(x.id));
+    const alt=(why==='order'||!before)?{id:s.id,label:s.name+'에서 바로 이야기 듣기',act:'here'}
+             :{id:before.id,label:AREAS[s.area].name+' 코스로 안내',act:'go'};
+    showWarn('order'+s.id+'-'+target.id,'<small>'+s.name+'의 QR이 인식됐어요</small><h4>예정된 장소가 아니에요</h4><p>'+msg+' 어느 쪽으로 갈까요?</p>'
+      +'<div class="dbtns two-opt"><button class="nextchip" data-go="'+target.id+'">'+target.name+(why==='order'?'부터 시작하기':'(으)로 계속 가기')+'</button>'
+      +(alt.act==='here'?'<button class="mini opt2" data-new="'+alt.id+'">'+alt.label+'</button>':'<button class="mini opt2" data-go="'+alt.id+'" data-reset="1">'+alt.label+'</button>')
+      +'</div>');
   }
   function warnUnknown(raw){
     showWarn('unk'+raw,'<small>알 수 없는 QR</small><h4>어디가노 QR이 아니에요</h4>'
