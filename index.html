@@ -196,10 +196,40 @@
   .qrwarn .mini{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
   .docent-layer{position:absolute;inset:0;display:none}
   .docent-layer.on{display:block}
-  .docent{position:absolute;left:5%;bottom:0;width:19%;animation:pop .8s ease-out both}
+  /* ── AR: 바닥(QR 표지)에 서 있는 도슨트 ── */
+  .sim-bg{position:absolute;inset:0;background:linear-gradient(#bcd3ea 0%,#e4edf3 48%,#9fb58c 48.2%,#7d9a6c 100%)}
+  .sim-bg::after{content:"";position:absolute;left:-20%;right:-20%;top:48%;bottom:-30%;transform-origin:top;transform:perspective(300px) rotateX(60deg);
+    background:repeating-linear-gradient(90deg,rgba(255,255,255,.18) 0 1px,transparent 1px 60px),repeating-linear-gradient(0deg,rgba(255,255,255,.18) 0 1px,transparent 1px 60px)}
+  .sim-bg span{position:absolute;right:12px;bottom:10px;font-size:12px;color:rgba(255,255,255,.85);background:rgba(35,32,74,.45);padding:3px 8px;border-radius:4px}
+  .live .sim-bg{display:none}
+  .ar-stage{position:absolute;inset:0;perspective:900px;overflow:hidden;pointer-events:none}
+  .ar-anchor{position:absolute;left:0;top:0;width:0;height:0;transform-style:preserve-3d}
+  .ar-floor{position:absolute;left:-130px;top:-130px;width:260px;height:260px;transform:rotateX(74deg);transform-style:preserve-3d}
+  .ar-grid{position:absolute;inset:0;border-radius:50%;
+    background:repeating-linear-gradient(0deg,rgba(167,139,250,.55) 0 1.5px,transparent 1.5px 26px),repeating-linear-gradient(90deg,rgba(167,139,250,.55) 0 1.5px,transparent 1.5px 26px);
+    -webkit-mask:radial-gradient(circle,#000 30%,transparent 70%);mask:radial-gradient(circle,#000 30%,transparent 70%)}
+  .ar-marker{position:absolute;left:94px;top:94px;width:72px;height:72px;border:3px solid #c4b5fd;border-radius:4px;box-shadow:0 0 18px rgba(167,139,250,.9),inset 0 0 12px rgba(167,139,250,.6)}
+  .ar-ring{position:absolute;left:80px;top:80px;width:100px;height:100px;border-radius:50%;border:2px solid rgba(196,181,253,.9);animation:ring 2.4s ease-out infinite}
+  .ar-ring.r2{animation-delay:1.2s}
+  @keyframes ring{from{transform:scale(.6);opacity:1}to{transform:scale(2.4);opacity:0}}
+  .ar-shadow{position:absolute;left:-42px;top:-10px;width:84px;height:20px;border-radius:50%;background:radial-gradient(rgba(0,0,0,.45),transparent 70%)}
+  .ar-fig{position:absolute;left:-55px;bottom:0;width:110px;height:220px;transform-origin:50% 100%;transform:rotateY(var(--ry,0deg))}
+  .docent{position:absolute;inset:0;width:100%;height:100%;filter:drop-shadow(0 0 6px rgba(167,139,250,.7)) drop-shadow(0 6px 6px rgba(0,0,0,.25))}
+  .ar-scan{position:absolute;left:-10%;right:-10%;height:4px;bottom:0;opacity:0;background:linear-gradient(90deg,transparent,#e9e3ff,transparent);box-shadow:0 0 14px #a78bfa}
+  .docent-layer.spawn .docent{animation:materialize 1.2s ease-out both}
+  .docent-layer.spawn .ar-scan{animation:scanup 1.2s ease-out both}
+  .docent-layer.spawn .ar-floor{animation:floorin .6s ease-out both}
+  @keyframes materialize{0%{clip-path:inset(100% 0 0 0);opacity:.4;filter:brightness(2.2) drop-shadow(0 0 16px #a78bfa)}
+    75%{clip-path:inset(0 0 0 0);opacity:.9;filter:brightness(1.4) drop-shadow(0 0 12px #a78bfa)}100%{clip-path:inset(0 0 0 0);opacity:1}}
+  @keyframes scanup{0%{bottom:0;opacity:1}85%{bottom:100%;opacity:1}100%{bottom:100%;opacity:0}}
+  @keyframes floorin{from{opacity:0;transform:rotateX(74deg) scale(.3)}to{opacity:1;transform:rotateX(74deg) scale(1)}}
+  .docent-layer .bubble{left:0;top:0;right:auto;width:min(320px,50%);transition:opacity .4s;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+  .docent-layer.spawn .bubble{animation:bubin .5s .8s ease-out both}
+  @keyframes bubin{from{opacity:0;translate:0 8px}to{opacity:1;translate:0 0}}
   @keyframes pop{from{transform:translateY(30px);opacity:0}}
   .bubble{position:absolute;left:27%;right:5%;top:9%;background:#fff;color:var(--ink);border-radius:6px;padding:18px 20px;font-size:clamp(15px,1.25vw,19px);line-height:1.65}
   .bubble::before{content:"";position:absolute;left:-10px;bottom:22px;border:10px solid transparent;border-right-color:#fff;border-left:0}
+  .bubble.flip::before{left:auto;right:-10px;border-right:0;border-left-color:#fff;border-right-color:transparent}
   .bubble small{display:block;font-family:var(--serif);font-weight:700;font-size:16px;color:var(--violet);margin-bottom:6px}
   .dbtns{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
   .nextchip{font-family:var(--sans);font-size:15px;font-weight:600;border:none;border-radius:6px;padding:9px 14px;cursor:pointer;background:var(--violet);color:#fff}
@@ -540,8 +570,13 @@
           <div class="scanbox" id="scanbox"></div>
           <div class="qrwarn" id="qrWarn" role="alert"></div>
           <div class="docent-layer" id="docentLayer">
-            <svg class="docent" viewBox="0 0 100 200" aria-hidden="true"><ellipse cx="50" cy="196" rx="34" ry="5" fill="rgba(0,0,0,.3)"/><path d="M22 195 L30 90 Q50 80 70 90 L78 195z" fill="#e9e4f7"/><path d="M50 84 L50 195" stroke="#6a3fd6" stroke-width="3"/><circle cx="50" cy="66" r="18" fill="#f3d9c0"/><rect x="28" y="40" width="44" height="6" rx="3" fill="#23204a"/><rect x="38" y="22" width="24" height="20" rx="4" fill="#23204a"/><path d="M70 100 Q88 110 92 90" stroke="#e9e4f7" stroke-width="10" fill="none" stroke-linecap="round"/></svg>
-            <div class="bubble"><small id="dName">도슨트</small><span id="dText"></span>
+            <div class="sim-bg" aria-hidden="true"><span>시연용 가상 화면</span></div>
+            <div class="ar-stage"><div class="ar-anchor" id="arAnchor">
+              <div class="ar-floor"><div class="ar-grid"></div><div class="ar-marker"></div><div class="ar-ring"></div><div class="ar-ring r2"></div></div>
+              <div class="ar-shadow"></div>
+              <div class="ar-fig"><svg class="docent" id="docentFig" viewBox="0 0 100 200" aria-hidden="true"><path d="M22 195 L30 90 Q50 80 70 90 L78 195z" fill="#e9e4f7"/><path d="M50 84 L50 195" stroke="#6a3fd6" stroke-width="3"/><circle cx="50" cy="66" r="18" fill="#f3d9c0"/><rect x="28" y="40" width="44" height="6" rx="3" fill="#23204a"/><rect x="38" y="22" width="24" height="20" rx="4" fill="#23204a"/><path d="M70 100 Q88 110 92 90" stroke="#e9e4f7" stroke-width="10" fill="none" stroke-linecap="round"/></svg><div class="ar-scan"></div></div>
+            </div></div>
+            <div class="bubble" id="bubble"><small id="dName">도슨트</small><span id="dText"></span>
               <div class="dbtns"><button class="mini" id="speakBtn">소리로 듣기</button><button class="nextchip" id="nextBtn">다음 장소로 가기</button></div>
             </div>
           </div>
@@ -767,7 +802,7 @@
     try{
       stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});
       video.srcObject=stream;await video.play();
-      document.getElementById('camIdle').style.display='none';
+      document.getElementById('camIdle').style.display='none';document.querySelector('.mc-view').classList.add('live');
       document.getElementById('camLabel').textContent='카메라 켜짐, QR을 찾는 중';
       document.getElementById('camBtn').textContent='카메라 끄기';
       document.getElementById('scanbox').classList.add('on');
@@ -776,7 +811,7 @@
   }
   function stopCam(){
     scanning=false;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
-    video.srcObject=null;document.getElementById('camIdle').style.display='flex';
+    video.srcObject=null;document.getElementById('camIdle').style.display='flex';document.querySelector('.mc-view').classList.remove('live');
     document.getElementById('camLabel').textContent='카메라 꺼짐';
     document.getElementById('camBtn').textContent='카메라 켜기';
     document.getElementById('scanbox').classList.remove('on');
@@ -791,10 +826,43 @@
       const w=480,h=Math.round(w*video.videoHeight/video.videoWidth)||360;
       cvs.width=w;cvs.height=h;ctx.drawImage(video,0,0,w,h);
       const code=jsQR(ctx.getImageData(0,0,w,h).data,w,h,{inversionAttempts:'dontInvert'});
-      if(code){const s=parseQR(code.data);if(!s)warnUnknown(code.data);else if(!lastStop||s.id!==lastStop.id)handleScan(s);}
+      if(code){const s=parseQR(code.data);if(s)trackMarker(code.location,w);if(!s)warnUnknown(code.data);else if(!lastStop||s.id!==lastStop.id)handleScan(s);}
     }
     setTimeout(()=>requestAnimationFrame(scan),120);
   }
+  /* ── AR 위치 계산: 카메라가 켜져 있으면 QR이 보이는 자리에, 아니면 가상 바닥에 도슨트를 세움 ── */
+  const view=document.querySelector('.mc-view'), anchor=document.getElementById('arAnchor'), fig=document.querySelector('.ar-fig'), bub=document.getElementById('bubble');
+  const ar={x:0,y:0,s:1,r:0}; let arRaf=0, track=null, tilt={g:0,b:0}, arInit=false;
+  function trackMarker(loc,cw){ // jsQR 좌표(캔버스) → 화면 좌표(object-fit: cover)
+    const W=view.clientWidth,H=view.clientHeight,vw=video.videoWidth,vh=video.videoHeight; if(!vw)return;
+    const k=vw/cw, sc=Math.max(W/vw,H/vh), ox=(W-vw*sc)/2, oy=(H-vh*sc)/2;
+    const P=p=>({x:p.x*k*sc+ox,y:p.y*k*sc+oy}), a=P(loc.topLeftCorner),b=P(loc.topRightCorner),c=P(loc.bottomRightCorner),d=P(loc.bottomLeftCorner);
+    const size=Math.hypot(b.x-a.x,b.y-a.y);
+    track={x:(a.x+b.x+c.x+d.x)/4,y:(c.y+d.y)/2,s:Math.max(.5,Math.min(2.6,size/70)),r:Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI,t:performance.now()};
+  }
+  addEventListener('deviceorientation',e=>{tilt.g=Math.max(-30,Math.min(30,e.gamma||0));tilt.b=Math.max(-30,Math.min(30,(e.beta||45)-45));});
+  function askTilt(){try{if(window.DeviceOrientationEvent&&DeviceOrientationEvent.requestPermission)DeviceOrientationEvent.requestPermission().catch(()=>{});}catch(e){}}
+  function arTarget(){
+    const W=view.clientWidth,H=view.clientHeight,t=performance.now()/1000;
+    if(stream&&track&&performance.now()-track.t<2000)return track;
+    // 손에 든 카메라처럼 살짝 흔들리고, 패드를 기울이면 시점이 따라 움직임
+    return {x:W*.24+Math.sin(t*.6)*W*.012-tilt.g*2.2,y:H*.84+Math.cos(t*.45)*H*.01-tilt.b*1.2,s:Math.min(W,H)/540,r:Math.sin(t*.35)*1.5-tilt.g*.08};
+  }
+  function arLoop(){
+    const W=view.clientWidth,H=view.clientHeight,T=arTarget();
+    if(!arInit){Object.assign(ar,T);arInit=true;}
+    for(const k of ['x','y','s','r'])ar[k]+=(T[k]-ar[k])*.18;
+    anchor.style.transform='translate('+ar.x+'px,'+ar.y+'px) scale('+ar.s+') rotateZ('+ar.r+'deg)';
+    fig.style.setProperty('--ry',((ar.x/W-.5)*-36)+'deg');
+    // 말풍선은 도슨트 머리 옆에, 화면 밖으로 나가지 않게
+    const bw=bub.offsetWidth,bh=bub.offsetHeight,headY=ar.y-200*ar.s;
+    let bx=ar.x+60*ar.s, flip=false; if(bx+bw>W-10){bx=ar.x-60*ar.s-bw;flip=true;}
+    bx=Math.max(10,Math.min(W-bw-10,bx)); const by=Math.max(10,Math.min(H-bh-10,headY-bh*.35));
+    bub.style.transform='translate('+bx+'px,'+by+'px)';bub.classList.toggle('flip',flip);
+    arRaf=requestAnimationFrame(arLoop);
+  }
+  function startAR(){if(!arRaf){arInit=false;arRaf=requestAnimationFrame(arLoop);}}
+  function stopAR(){cancelAnimationFrame(arRaf);arRaf=0;}
   /* ── QR 순서 확인: 이야기 차례가 아닌 장소의 QR이면 다음 장소로 안내 ── */
   let warnKey='',warnAt=0;
   const isStart=s=>!STOPS.some(x=>x.next===s.id);
@@ -829,7 +897,7 @@
     document.getElementById('qrWarn').classList.remove('on');
     lastStop=s;heard.add(s.id);renderList(document.querySelector('#chips .on').dataset.f);
     progEl.innerHTML='';chainOf(s).forEach(x=>{const b=document.createElement('i');if(heard.has(x.id))b.className='on';progEl.appendChild(b);});
-    const layer=document.getElementById('docentLayer');layer.classList.remove('on');void layer.offsetWidth;layer.classList.add('on');
+    const layer=document.getElementById('docentLayer');layer.classList.remove('on','spawn');void layer.offsetWidth;layer.classList.add('on','spawn');startAR();
     document.getElementById('scanbox').classList.remove('on');document.getElementById('camIdle').classList.add('hide');
     document.getElementById('dName').textContent=s.name+(s.type==='hidden'?'  · 숨은 명소':'');
     document.getElementById('droneLbl').textContent=s.name+' 위에서 본 모습';
@@ -1019,7 +1087,7 @@
   })();
   function hideDocent(){ // 화면에서만 지움. 어디까지 들었는지(lastStop)는 남겨서 이야기가 이어지게 함
     document.getElementById('qrWarn').classList.remove('on');
-    document.getElementById('docentLayer').classList.remove('on');
+    document.getElementById('docentLayer').classList.remove('on');stopAR();
     document.getElementById('camIdle').classList.remove('hide');
     clearInterval(typing);document.getElementById('dText').textContent='';
     if('speechSynthesis' in window)speechSynthesis.cancel();
@@ -1028,6 +1096,7 @@
     const expected=lastStop&&lastStop.next?STOPS.find(x=>x.id===lastStop.next):STOPS[0];
     const wrong=STOPS.find(x=>x.id===(expected.next||expected.id+1))||STOPS.find(x=>x.id!==expected.id&&!isStart(x));
     handleScan(wrong);};
+  document.getElementById('camBtn').addEventListener('click',askTilt);document.getElementById('simBtn').addEventListener('click',askTilt);
   document.getElementById('camBtn').onclick=startCam;
   document.getElementById('simBtn').onclick=()=>{
     // 지도에서 고른 장소가 있으면 그곳, 아니면 코스의 다음 장소, 그것도 없으면 아직 안 들은 첫 장소
