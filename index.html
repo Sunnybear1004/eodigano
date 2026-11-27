@@ -129,6 +129,21 @@
   .d3ctrl{position:absolute;left:10px;bottom:4px}
   .d3chips{margin-bottom:2vh}
   .d3chips span.on{border-color:var(--violet);color:var(--violet)}
+  /* ── 추후 개발: 홀로그램 ── */
+  .holo-wrap{display:grid;grid-template-columns:1fr 1.05fr;gap:4vw;align-items:center}
+  .holo{margin:0;display:flex;flex-direction:column;align-items:center}
+  .holo-beam{position:relative;width:100%;aspect-ratio:4/3;max-height:46vh;border-radius:6px;overflow:hidden;
+    background:radial-gradient(ellipse at 50% 100%,rgba(110,210,255,.35),rgba(35,32,74,.95) 65%),#1b1840}
+  .holo-beam::before{content:"";position:absolute;left:18%;right:18%;bottom:0;top:8%;background:linear-gradient(to top,rgba(140,220,255,.28),transparent);clip-path:polygon(20% 100%,80% 100%,100% 0,0 0);pointer-events:none}
+  #terrainHolo{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab;animation:flick 4s infinite}
+  .holo-lines{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(170,235,255,.07) 0 1px,transparent 1px 4px)}
+  @keyframes flick{0%,96%,100%{opacity:1}97%{opacity:.75}98%{opacity:.95}}
+  .holo-base{width:70%;height:18px;margin-top:-4px;border-radius:0 0 50% 50%/0 0 100% 100%;background:linear-gradient(#3a3570,#23204a);box-shadow:0 0 24px rgba(110,210,255,.5)}
+  .holo figcaption{margin-top:14px;text-align:center;font-size:15px;color:var(--soft);line-height:1.6}
+  .holo figcaption b{display:block;font-family:var(--serif);font-size:20px;color:var(--ink)}
+  .holo-dots{display:flex;gap:8px;justify-content:center;margin-top:8px}
+  .holo-dots i{width:10px;height:10px;border-radius:50%;background:var(--line);cursor:pointer}
+  .holo-dots i.on{background:var(--violet)}
   /* ── 시연 화면 ── */
   #demo-map,#demo-cam{padding-top:5vh;padding-bottom:5vh}
   .demo-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:3vh}
@@ -617,6 +632,24 @@
   </div>
 </section>
 
+<section id="future" data-title="8. 추후 개발">
+  <div class="inner rv">
+    <h2>앞으로, 명소마다 홀로그램을 세웁니다.</h2>
+    <div class="holo-wrap">
+      <dl class="terms">
+        <div><dt>어디에</dt><dd>제천 10경과 숨은 명소마다 한 대씩. 의림지에 하나, 탁사정에 하나, 장락동 칠층모전석탑에 하나.</dd></div>
+        <div><dt>무엇을</dt><dd>내가 지금까지 걸어온 길과, 그 명소 전체가 어떻게 생겼는지를 입체로 보여줍니다.</dd></div>
+        <div><dt>왜</dt><dd>휴대폰보다 크게, 함께 온 사람들이 같이 보면서 다음에 갈 곳을 고를 수 있습니다.</dd></div>
+      </dl>
+      <figure class="holo interactive">
+        <div class="holo-beam"><canvas id="terrainHolo" aria-label="홀로그램으로 보여주는 명소 전체 모습과 걸어온 길"></canvas><div class="holo-lines"></div></div>
+        <div class="holo-base"></div>
+        <figcaption><b id="holoName"></b><span id="holoWalk"></span><span class="holo-dots" id="holoDots"></span></figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
 <section id="end" class="dark" data-title="9. 마무리">
   <div class="inner rv">
     <h1>감사합니다.</h1>
@@ -897,7 +930,8 @@
   const TERRAIN={ uirimji:['lake','pavilion'], jangnak:['plain','tower'], bakdal:['pass',null],
     worak:['mountain','pavilion'], cheongpung:['lakehill','pavilion'], geumsu:['mountainlake','pavilion'],
     yongha:['ninebends',null], songgye:['gorgepeak','gate'], oksun:['peaks',null], taksa:['cliffpool','pavilion'], baeron:['boat','chapel'] };
-  function makeT3D(cv,altEl){
+  function makeT3D(cv,altEl,opts={}){
+    const holo=!!opts.holo; let route=null;
     const ctx=cv.getContext('2d');
     const N=36; let H=[],W=[],S=[],deco=[],autumnRatio=0,water=-9,lm=null,yaw=0.7,tilt=1.0,zoom=1,spin=true,raf=0,last=0,drag=null,bob=0;
     const L=(()=>{const v=[-0.5,-0.4,0.75],m=Math.hypot(...v);return v.map(x=>x/m);})();
@@ -1033,7 +1067,18 @@
       list.sort((p,q)=>p.d-q.d);
       ctx.clearRect(0,0,cv.width,cv.height);
       for(const f of list){ctx.beginPath();ctx.moveTo(f.P[0][0],f.P[0][1]);for(let k=1;k<f.P.length;k++)ctx.lineTo(f.P[k][0],f.P[k][1]);ctx.closePath();
-        ctx.fillStyle=f.c;ctx.fill();ctx.strokeStyle=f.c;ctx.lineWidth=.6;ctx.stroke();}
+        if(holo){ // 홀로그램: 반투명한 하늘빛 면 + 밝은 선
+          const m=f.c.match(/\d+/g).map(Number),lum=(m[0]+m[1]+m[2])/765;
+          ctx.fillStyle='rgba(110,210,255,'+(.08+lum*.32).toFixed(3)+')';ctx.fill();ctx.strokeStyle='rgba(170,235,255,.28)';ctx.lineWidth=.6;ctx.stroke();}
+        else{ctx.fillStyle=f.c;ctx.fill();ctx.strokeStyle=f.c;ctx.lineWidth=.6;ctx.stroke();}}
+      if(route){ // 지금까지 걸어온 길: 빛나는 선과 장소 점
+        const P=route.map(([x,y])=>proj(x,y,hAt(x,y)+.03));
+        ctx.save();ctx.lineCap='round';ctx.lineJoin='round';ctx.shadowColor='#ffd166';ctx.shadowBlur=14;
+        ctx.strokeStyle='rgba(255,214,102,.95)';ctx.lineWidth=Math.max(3,cv.width/220);ctx.setLineDash([cv.width/60,cv.width/90]);ctx.lineDashOffset=-bob*20;
+        ctx.beginPath();P.forEach((p,k)=>k?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();ctx.setLineDash([]);
+        P.forEach((p,k)=>{const last=k===P.length-1,r=(last?7+Math.sin(bob*2)*2:5)*cv.width/600;ctx.fillStyle=last?'#ffd166':'#fff';
+          ctx.beginPath();ctx.arc(p[0],p[1],r,0,7);ctx.fill();});
+        ctx.restore();}
     }
     function loop(ts){
       const dt=Math.min(50,ts-(last||ts));last=ts;
@@ -1048,14 +1093,27 @@
     addEventListener('resize',size);
     function show(s){
       const [k,b]=TERRAIN[s.area]||['plain','pavilion'];build(k,s.id*131+7);landmark(b,k);
-      const peak=Math.max(...H.flat());altEl.innerHTML='고도 '+Math.round(120+peak*500)+'m<br>끌어서 돌려 보기';
+      const peak=Math.max(...H.flat());if(altEl)altEl.innerHTML='고도 '+Math.round(120+peak*500)+'m<br>끌어서 돌려 보기';
     }
     show(STOPS[0]);
-    return { show, start(){size();if(!raf)raf=requestAnimationFrame(loop);}, stop(){cancelAnimationFrame(raf);raf=0;},
+    return { show, setRoute(r){route=r;}, start(){size();if(!raf)raf=requestAnimationFrame(loop);}, stop(){cancelAnimationFrame(raf);raf=0;},
       toggleSpin(){spin=!spin;return spin;}, ratio(){return autumnRatio;}, toggleZoom(){zoom=zoom>1?1:1.45;return zoom>1;} };
   }
   const T3D=makeT3D(document.getElementById('terrain'),document.getElementById('altText'));
   const T3DBig=makeT3D(document.getElementById('terrainBig'),document.getElementById('altBig'));
+  /* ── 추후 개발: 명소마다 세울 홀로그램 (걸어온 길 + 명소 전체 모습) ── */
+  const T3DHolo=makeT3D(document.getElementById('terrainHolo'),null,{holo:true});
+  const HOLO=[
+    {area:'uirimji',label:'의림지',walked:'용추폭포 → 경호루 → 제림 → 영호정',route:[[-.42,.62],[-.18,.54],[.12,.52],[.42,.5]]},
+    {area:'taksa',label:'탁사정',walked:'계곡 입구 → 백사장 → 절벽 위 정자',route:[[-.75,.5],[-.35,.47],[0,.35],[.2,-.12]]},
+    {area:'jangnak',label:'장락동 칠층모전석탑',walked:'철길 건널목 → 논길 → 칠층모전석탑 → 장락사',route:[[-.8,.58],[-.4,.35],[0,.05],[0,-.3]]}
+  ];
+  let holoIdx=0,holoTimer=0;
+  function holoShow(i){holoIdx=i;const h=HOLO[i];T3DHolo.show(STOPS.find(s=>s.area===h.area));T3DHolo.setRoute(h.route);
+    document.getElementById('holoName').textContent=h.label;document.getElementById('holoWalk').textContent=h.walked;
+    [...document.querySelectorAll('#holoDots i')].forEach((d,k)=>d.classList.toggle('on',k===i));}
+  HOLO.forEach((h,i)=>{const d=document.createElement('i');d.title=h.label;d.onclick=()=>holoShow(i);document.getElementById('holoDots').appendChild(d);});
+  holoShow(0);
 
 
   (function(){ // 3D 시연 장: 장소 고르기
@@ -1140,6 +1198,7 @@
     if(sec.id==='demo-map'){initMap();setTimeout(()=>map&&map.invalidateSize(),DURATION+20);}
     if(sec.id==='demo-cam')setTimeout(()=>T3D.start(),60);else T3D.stop();
     if(sec.id==='demo-3d')setTimeout(()=>T3DBig.start(),60);else T3DBig.stop();
+    if(sec.id==='future'){setTimeout(()=>T3DHolo.start(),60);clearInterval(holoTimer);holoTimer=setInterval(()=>holoShow((holoIdx+1)%HOLO.length),6000);}else{T3DHolo.stop();clearInterval(holoTimer);}
     if(sec.id!=='demo-cam'){if(stream)stopCam();hideDocent();}   // 카메라 장을 벗어나면 도슨트도 사라짐       // 카메라 장을 벗어나면 카메라 끄기
   }
   function update(){
