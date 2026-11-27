@@ -181,6 +181,8 @@
   .place.done b::after{content:"  들었음";font-family:var(--sans);font-size:12px;font-weight:600;color:var(--blue)}
   .mini{font-family:var(--sans);font-size:15px;font-weight:600;border-radius:6px;padding:9px 14px;cursor:pointer;background:var(--violet);color:#fff;border:none}
   .mini.light{background:#fff;color:var(--ink)}
+  .mini.light.qr{background:#ffd166;color:var(--ink)}
+  .mini:disabled{opacity:.6;cursor:default}
   .mini.line{background:transparent;border:1.5px solid var(--ink);color:var(--ink);margin-top:auto}
   .mini.dark{background:transparent;border:1px solid rgba(255,255,255,.4);color:#fff;font-weight:400}
   .mm-map{flex:1;position:relative;background:var(--mist)}
@@ -196,6 +198,7 @@
   #video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   .cam-idle{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;color:rgba(255,255,255,.7);font-size:19px;line-height:1.7}
   .cam-idle.hide{display:none}
+  .cam-idle b{color:#ffd166;font-weight:600}
   .ar-label{position:absolute;left:14px;top:12px;color:#fff;font-size:13px;opacity:.8}
   .scanbox{position:absolute;left:50%;top:50%;width:200px;height:200px;margin:-100px 0 0 -100px;display:none;
            border:3px solid #fff;border-radius:6px}
@@ -448,31 +451,9 @@
   </div>
 </section>
 
-<section data-title="4. 산출물 개요">
-  <div class="inner rv">
-    <h2>어디가노는 제천 10경을 이야기로 잇는 안내 서비스입니다.</h2>
-    <div class="two">
-      <div>
-        <p class="lead" style="color:var(--violet)">지도</p>
-        <p>제천 10경과 그 안에 숨은 명소를 지도에서 고르고, 출발 지점까지 길을 안내받습니다.</p>
-      </div>
-      <div>
-        <p class="lead" style="color:var(--blue)">카메라</p>
-        <p>현장의 QR을 비추면 AR 도슨트가 이야기를 들려주고, 드론으로 내려다본 듯한 3D 화면이 함께 나옵니다.</p>
-      </div>
-    </div>
-    <dl class="facts">
-      <div><dt>10곳</dt><dd>제천 10경</dd></div>
-      <div><dt>5곳</dt><dd>10경 곁의 숨은 명소</dd></div>
-      <div><dt>18개</dt><dd>이야기가 이어지는 QR</dd></div>
-      <div><dt>0개</dt><dd>설치해야 하는 앱</dd></div>
-    </dl>
-  </div>
-</section>
-
 <section data-title="4. 기능 도출">
   <div class="inner rv">
-    <h2>그래서 두 가지 기능을 만들었습니다.</h2>
+    <h2>두 가지 기능을 만들었습니다.</h2>
     <div class="two">
       <dl class="terms">
         <div><dt style="color:var(--violet)">지도</dt><dd>제천 10경과 숨은 명소를 나눠 보기</dd></div>
@@ -733,6 +714,7 @@
     ss.forEach((s,i)=>L.marker([s.lat,s.lng],{icon:L.divIcon({className:'',html:'<div class="num-ico">'+(i+1)+'</div>',iconSize:[24,24],iconAnchor:[12,12]}),zIndexOffset:500}).addTo(areaLayer));
   }
   function showAreaIntro(k){
+    resetGo();
     const A=AREAS[k], ss=stopsOf(k);
     selected=null;renderList(curFilter());drawArea(k);
     if(routeLine){routeLine.remove();routeLine=null;}
@@ -765,6 +747,7 @@
     if(activeArea)drawArea(activeArea);
   }
   function selectStop(s){
+    resetGo();
     selected=s;activeArea=s.area;renderList(curFilter());
     const d=dist(me,s);
     document.getElementById('navText').textContent=s.name+'까지 '+fmt(d)+', '+travel(d);
@@ -773,21 +756,35 @@
     routeLine=L.polyline([[me.lat,me.lng],[s.lat,s.lng]],{color:'#6A3FD6',weight:4,dashArray:'2 9',lineCap:'round'}).addTo(map);
     map.fitBounds(routeLine.getBounds().pad(0.4));
   }
-  document.getElementById('goBtn').onclick=()=>{
+  /* 길 안내 → 도착하면 버튼이 'QR 인식'으로 바뀌고, 누르면 카메라 장으로 */
+  let arrived=null, pendingQR=null;
+  const goBtn=document.getElementById('goBtn');
+  function resetGo(){arrived=null;goBtn.textContent='길 안내 시작';goBtn.classList.remove('qr');}
+  goBtn.onclick=()=>{
+    if(arrived){openQRFor(arrived);return;}
     if(!selected){
       if(activeArea){clicks[activeArea]=2;showStart(activeArea);return;}
       document.getElementById('navText').textContent='먼저 목록에서 장소를 고르세요';return;}
-    if(!map)return;
     const s=selected,from={...me},t0=performance.now(),T=4000;
-    if(walker)walker.remove();
-    walker=L.circleMarker([from.lat,from.lng],{radius:9,color:'#fff',weight:3,fillColor:'#6A3FD6',fillOpacity:1}).addTo(map);
+    if(walker){walker.remove();walker=null;}
+    if(map)walker=L.circleMarker([from.lat,from.lng],{radius:9,color:'#fff',weight:3,fillColor:'#6A3FD6',fillOpacity:1}).addTo(map);
+    goBtn.disabled=true;
     (function step(now){const p=Math.min(1,(now-t0)/T);
-      const pos=[from.lat+(s.lat-from.lat)*p,from.lng+(s.lng-from.lng)*p];walker.setLatLng(pos);
+      const pos=[from.lat+(s.lat-from.lat)*p,from.lng+(s.lng-from.lng)*p];if(walker)walker.setLatLng(pos);
       const left=dist({lat:pos[0],lng:pos[1]},s);
-      document.getElementById('navText').textContent=p<1?'안내 중, 남은 거리 '+fmt(left):s.name+'에 도착했어요. 이제 QR을 비춰 보세요';
-      if(p<1)requestAnimationFrame(step);else{me={lat:s.lat,lng:s.lng};meMarker.setLatLng(pos);}
+      document.getElementById('navText').textContent=p<1?'안내 중, 남은 거리 '+fmt(left):s.name+'에 도착했어요';
+      if(p<1)requestAnimationFrame(step);
+      else{me={lat:s.lat,lng:s.lng};if(meMarker)meMarker.setLatLng(pos);
+        arrived=s;goBtn.disabled=false;goBtn.textContent='QR 인식';goBtn.classList.add('qr');}
     })(t0);
   };
+  function openQRFor(s){
+    pendingQR=s;
+    document.getElementById('camIdle').innerHTML='<span><b>'+s.name+'</b>에 도착했어요<br>안내판의 QR을 비춰 주세요</span>';
+    T3D.show(s);document.getElementById('droneLbl').textContent=s.name+' 위에서 본 모습';
+    goTo(secs.indexOf(document.getElementById('demo-cam')));
+    startCam({silent:true}); // 버튼을 누른 순간에 카메라를 켜야 브라우저가 허용함. 안 되면 'QR 없이 보기'로 시연
+  }
   document.getElementById('locBtn').onclick=()=>{
     if(!navigator.geolocation){alert('이 기기는 위치 정보를 지원하지 않아요.');return;}
     navigator.geolocation.getCurrentPosition(p=>{
@@ -803,9 +800,10 @@
   let stream=null,scanning=false,typing=null,lastStop=null;
   const progEl=document.getElementById('progress');
 
-  async function startCam(){
-    if(stream){stopCam();return;}
-    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){alert('카메라를 쓸 수 없어요. https 주소(GitHub Pages)에서 열어 주세요.');return;}
+  async function startCam(e){
+    if(stream){if(e&&e.type==='click')stopCam();return;}
+    const silent=e&&e.silent;
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){if(!silent)alert('카메라를 쓸 수 없어요. https 주소(GitHub Pages)에서 열어 주세요.');return;}
     try{
       stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});
       video.srcObject=stream;await video.play();
@@ -814,7 +812,7 @@
       document.getElementById('camBtn').textContent='카메라 끄기';
       document.getElementById('scanbox').classList.add('on');
       scanning=true;requestAnimationFrame(scan);
-    }catch(err){alert('카메라 권한이 필요해요. 브라우저 설정에서 카메라를 허용해 주세요.');}
+    }catch(err){if(!silent)alert('카메라 권한이 필요해요. 브라우저 설정에서 카메라를 허용해 주세요.');}
   }
   function stopCam(){
     scanning=false;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
@@ -874,10 +872,12 @@
   let warnKey='',warnAt=0;
   const isStart=s=>!STOPS.some(x=>x.next===s.id);
   function handleScan(s){
-    const expected=lastStop&&lastStop.next?STOPS.find(x=>x.id===lastStop.next):null;
-    if(expected&&s.id!==expected.id&&!heard.has(s.id)) return warnOrder(s,expected);
-    if(!expected){const ch=chainOf(s),first=ch.find(x=>!heard.has(x.id));
-      if(first&&ch.indexOf(first)<ch.indexOf(s)) return warnOrder(s,first);}
+    // 각 경(구역)의 첫 장소는 언제든 이야기를 시작할 수 있는 입구. 지도에서 골라 찾아온 곳도 그대로 시작.
+    const area=stopsOf(s.area),idx=area.indexOf(s);
+    if(idx<=0||(pendingQR&&pendingQR.id===s.id)) return showDocent(s);
+    // 구역 안의 다음 장소는 앞 장소 이야기를 들어야 이어짐 (예: 의림지 경호루는 용추폭포 다음)
+    const first=area.slice(0,idx).find(x=>!heard.has(x.id));
+    if(first) return warnOrder(s,first);
     showDocent(s);
   }
   function showWarn(key,html){
@@ -901,6 +901,7 @@
       +'<p>장소 안내판에 붙은 어디가노 QR을 비춰 주세요.</p><div class="dbtns"><button class="mini" data-close>닫기</button></div>');
   }
   function showDocent(s){
+    if(pendingQR&&pendingQR.id===s.id){pendingQR=null;}
     document.getElementById('qrWarn').classList.remove('on');
     lastStop=s;heard.add(s.id);renderList(document.querySelector('#chips .on').dataset.f);
     progEl.innerHTML='';chainOf(s).forEach(x=>{const b=document.createElement('i');if(heard.has(x.id))b.className='on';progEl.appendChild(b);});
@@ -1121,18 +1122,20 @@
     document.getElementById('qrWarn').classList.remove('on');
     document.getElementById('docentLayer').classList.remove('on');stopAR();
     document.getElementById('camIdle').classList.remove('hide');
+    if(!pendingQR)document.getElementById('camIdle').innerHTML='카메라를 켜고<br>현장의 QR코드를 비춰 주세요';
     clearInterval(typing);document.getElementById('dText').textContent='';
     if('speechSynthesis' in window)speechSynthesis.cancel();
   }
-  document.getElementById('wrongBtn').onclick=()=>{ // 시연용: 차례가 아닌 장소의 QR을 비춘 상황
-    const expected=lastStop&&lastStop.next?STOPS.find(x=>x.id===lastStop.next):STOPS[0];
-    const wrong=STOPS.find(x=>x.id===(expected.next||expected.id+1))||STOPS.find(x=>x.id!==expected.id&&!isStart(x));
-    handleScan(wrong);};
+  document.getElementById('wrongBtn').onclick=()=>{ // 시연용: 구역 안에서 순서를 건너뛴 QR을 비춘 상황
+    const mid=x=>{const a=stopsOf(x.area),i=a.indexOf(x);return i>0&&a.slice(0,i).some(y=>!heard.has(y.id));};
+    const pref=lastStop?STOPS.filter(x=>x.area===lastStop.area&&mid(x)):[];
+    const wrong=pref[pref.length-1]||STOPS.filter(x=>x.area==='uirimji'&&mid(x)).pop()||STOPS.find(mid);
+    if(wrong)handleScan(wrong);};
   document.getElementById('camBtn').addEventListener('click',askTilt);document.getElementById('simBtn').addEventListener('click',askTilt);
   document.getElementById('camBtn').onclick=startCam;
   document.getElementById('simBtn').onclick=()=>{
     // 지도에서 고른 장소가 있으면 그곳, 아니면 코스의 다음 장소, 그것도 없으면 아직 안 들은 첫 장소
-    let n=(selected&&!heard.has(selected.id))?selected:(lastStop&&lastStop.next?STOPS.find(x=>x.id===lastStop.next):null);
+    let n=pendingQR?pendingQR:(selected&&!heard.has(selected.id))?selected:(lastStop&&lastStop.next?STOPS.find(x=>x.id===lastStop.next):null);
     if(!n)n=STOPS.find(x=>!heard.has(x.id))||STOPS[0];
     showDocent(n);};
   document.getElementById('nextBtn').onclick=()=>{
