@@ -759,7 +759,7 @@
   /* 길 안내 → 도착하면 버튼이 'QR 인식'으로 바뀌고, 누르면 카메라 장으로 */
   let arrived=null, pendingQR=null;
   const goBtn=document.getElementById('goBtn');
-  function resetGo(){arrived=null;goBtn.textContent='길 안내 시작';goBtn.classList.remove('qr');}
+  function resetGo(){arrived=null;pendingQR=null;goBtn.textContent='길 안내 시작';goBtn.classList.remove('qr');}
   goBtn.onclick=()=>{
     if(arrived){openQRFor(arrived);return;}
     if(!selected){
@@ -871,13 +871,19 @@
   /* ── QR 순서 확인: 이야기 차례가 아닌 장소의 QR이면 다음 장소로 안내 ── */
   let warnKey='',warnAt=0;
   const isStart=s=>!STOPS.some(x=>x.next===s.id);
+  const areaStart=s=>stopsOf(s.area)[0].id===s.id;
+  function expectedStop(){ // 지금 가기로 한 곳: 길 안내로 도착한 곳 > 이야기의 다음 장소
+    if(pendingQR)return {s:pendingQR,why:'nav'};
+    if(lastStop&&lastStop.next)return {s:STOPS.find(x=>x.id===lastStop.next),why:'story'};
+    return null;
+  }
   function handleScan(s){
-    // 각 경(구역)의 첫 장소는 언제든 이야기를 시작할 수 있는 입구. 지도에서 골라 찾아온 곳도 그대로 시작.
+    const ex=expectedStop();
+    if(ex){ if(s.id===ex.s.id) return showDocent(s); return warnOrder(s,ex.s,ex.why); }
+    // 가기로 한 곳이 없으면: 각 경(구역)의 첫 장소는 어디서든 시작, 구역 안 순서는 지켜야 함
     const area=stopsOf(s.area),idx=area.indexOf(s);
-    if(idx<=0||(pendingQR&&pendingQR.id===s.id)) return showDocent(s);
-    // 구역 안의 다음 장소는 앞 장소 이야기를 들어야 이어짐 (예: 의림지 경호루는 용추폭포 다음)
-    const first=area.slice(0,idx).find(x=>!heard.has(x.id));
-    if(first) return warnOrder(s,first);
+    const first=area.slice(0,Math.max(0,idx)).find(x=>!heard.has(x.id));
+    if(first) return warnOrder(s,first,'order');
     showDocent(s);
   }
   function showWarn(key,html){
@@ -886,14 +892,16 @@
     const g=w.querySelector('[data-go]');if(g)g.onclick=()=>{const tgt=STOPS.find(x=>x.id===+g.dataset.go);w.classList.remove('on');
       if(lastStop){me={lat:lastStop.lat,lng:lastStop.lng};if(meMarker)meMarker.setLatLng([me.lat,me.lng]);}
       goTo(secs.indexOf(document.getElementById('demo-map')));setTimeout(()=>selectStop(tgt),DURATION+50);};
-    const n=w.querySelector('[data-new]');if(n)n.onclick=()=>{w.classList.remove('on');lastStop=null;showDocent(STOPS.find(x=>x.id===+n.dataset.new));};
+    const n=w.querySelector('[data-new]');if(n)n.onclick=()=>{w.classList.remove('on');lastStop=null;pendingQR=null;showDocent(STOPS.find(x=>x.id===+n.dataset.new));};
     const c=w.querySelector('[data-close]');if(c)c.onclick=()=>w.classList.remove('on');
   }
-  function warnOrder(s,target){
-    showWarn('order'+s.id,'<small>'+s.name+'의 QR이에요</small><h4>아직 이 장소 차례가 아니에요</h4>'
-      +'<p>이야기는 <b>'+target.name+'</b>에서 이어져요. 먼저 그곳으로 가서 QR을 비춰 주세요.</p>'
+  function warnOrder(s,target,why){
+    const msg=why==='nav'?'길 안내로 도착한 곳은 <b>'+target.name+'</b>이에요. '+target.name+'의 QR을 비춰 주세요.'
+            :why==='story'?'이야기는 <b>'+target.name+'</b>에서 이어져요. 먼저 그곳으로 가서 QR을 비춰 주세요.'
+            :'이 코스는 <b>'+target.name+'</b>부터 시작해요. 먼저 그곳의 QR을 비춰 주세요.';
+    showWarn('order'+s.id+'-'+target.id,'<small>'+s.name+'의 QR이에요</small><h4>다음 장소가 아니에요</h4><p>'+msg+'</p>'
       +'<div class="dbtns"><button class="nextchip" data-go="'+target.id+'">'+target.name+' 길 안내</button>'
-      +(isStart(s)?'<button class="mini" data-new="'+s.id+'">여기서 새 이야기 시작</button>':'')
+      +(areaStart(s)&&why!=='order'?'<button class="mini" data-new="'+s.id+'">여기서 새 이야기 시작</button>':'')
       +'<button class="mini" data-close>닫기</button></div>');
   }
   function warnUnknown(raw){
@@ -1126,11 +1134,11 @@
     clearInterval(typing);document.getElementById('dText').textContent='';
     if('speechSynthesis' in window)speechSynthesis.cancel();
   }
-  document.getElementById('wrongBtn').onclick=()=>{ // 시연용: 구역 안에서 순서를 건너뛴 QR을 비춘 상황
-    const mid=x=>{const a=stopsOf(x.area),i=a.indexOf(x);return i>0&&a.slice(0,i).some(y=>!heard.has(y.id));};
-    const pref=lastStop?STOPS.filter(x=>x.area===lastStop.area&&mid(x)):[];
-    const wrong=pref[pref.length-1]||STOPS.filter(x=>x.area==='uirimji'&&mid(x)).pop()||STOPS.find(mid);
-    if(wrong)handleScan(wrong);};
+  document.getElementById('wrongBtn').onclick=()=>{ // 시연용: 가기로 한 곳이 아닌 다른 장소의 QR을 비춘 상황
+    const ex=expectedStop();
+    if(ex){const a=stopsOf(ex.s.area),i=a.indexOf(ex.s);
+      const wrong=a[i+1]||STOPS.find(x=>x.area==='jangnak'&&x.id!==ex.s.id)||STOPS.find(x=>x.id!==ex.s.id);handleScan(wrong);}
+    else handleScan(STOPS.find(x=>x.area==='uirimji'&&!areaStart(x)&&stopsOf('uirimji').slice(0,stopsOf('uirimji').indexOf(x)).some(y=>!heard.has(y.id)))||STOPS[2]);};
   document.getElementById('camBtn').addEventListener('click',askTilt);document.getElementById('simBtn').addEventListener('click',askTilt);
   document.getElementById('camBtn').onclick=startCam;
   document.getElementById('simBtn').onclick=()=>{
